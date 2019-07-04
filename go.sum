@@ -1,0 +1,6 @@
+github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
+github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/xubiosueldos/framework v0.0.0-20190603145241-3bd1c9badd91 h1:ciXkSt5dtZ0iYsHHNjQSMiX8yEf7Axr9TzvDwXvYlTo=
+github.com/xubiosueldos/framework v0.0.0-20190603145241-3bd1c9badd91/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
+github.com/xubiosueldos/framework v0.0.0-20190704104244-28f34bb9caf3 h1:A3H3rHyjuQ7y6YqdBv7mV15FCZ2RoDaScLgJxrKEKwo=
+github.com/xubiosueldos/framework v0.0.0-20190704104244-28f34bb9caf3/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
