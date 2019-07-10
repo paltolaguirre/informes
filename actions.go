@@ -24,6 +24,11 @@ type InformeLibroSueldos struct {
 	Importe                 float32   `json:"importe"`
 }
 
+// Sirve para controlar si el server esta OK
+func Healthy(writer http.ResponseWriter, request *http.Request) {
+	writer.Write([]byte("Healthy."))
+}
+
 func InformeF931(w http.ResponseWriter, r *http.Request) {
 	var informesf931 []Informef931
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
