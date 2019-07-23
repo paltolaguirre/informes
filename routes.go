@@ -42,7 +42,7 @@ var routes = Routes{
 	Route{
 		"LibroSueldos",
 		"GET",
-		"/api/informe/informes/librosueldos",
+		"/api/informe/informes/libro-sueldos",
 		LibroSueldos,
 	},
 }
