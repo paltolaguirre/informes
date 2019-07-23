@@ -36,7 +36,7 @@ var routes = Routes{
 	Route{
 		"InformeF931",
 		"GET",
-		"/api/informe/informes/f931",
+		"/api/informe/informes/cargas-sociales-f931",
 		InformeF931,
 	},
 	Route{
