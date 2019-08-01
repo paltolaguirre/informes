@@ -13,9 +13,9 @@ BEGIN
 
 	 SELECT c.nombre, sum(importeunitario) as importe
 	 FROM liquidacion l
-	 LEFT JOIN sp_liquidacionconceptos() lc ON lc.id = l.id
+	 LEFT JOIN sp_liquidacionconceptos() lc ON lc.liquidacionid = l.id
 	 LEFT JOIN sp_conceptos() c ON lc.conceptoid = c.id
-	 WHERE l.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
+	 WHERE l.fecha BETWEEN fechadesde AND fechahasta
 	 GROUP BY c.nombre, c.id;
 
 END; $BODY$
