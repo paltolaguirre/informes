@@ -2,7 +2,7 @@
 
 -- DROP FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
 
-CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, IN fechahasta date, IN actividad character varying, IN tipodeempresa character varying, IN zona character varying, IN zonanombre character varying, IN reducevalor character varying, IN importeretraccion numeric)
+CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, IN fechahasta date, IN actividad character varying, IN tipodeempresa character varying, IN zona character varying, IN zonanombre character varying, IN reducevalor character varying, IN importedetraccion numeric)
   RETURNS TABLE(data text) 
   AS $BODY$
 DECLARE
@@ -128,7 +128,7 @@ BEGIN
 	REPEAT('0', 9)::VARCHAR AS ContribucionTareaDiferencial,
 	REPEAT('0', 3)::VARCHAR AS HorasTrabajadas,
 	'T'::VARCHAR AS SeguroColectivoDeVidaObligatorio,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeRetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeDetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion
 	FROM Legajo l
 	INNER JOIN Liquidacion li ON li.legajoid = l.id
 	LEFT JOIN Conyuge co ON co.legajoid = l.id

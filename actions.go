@@ -109,7 +109,7 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 
 		var p_fechadesde string = r.URL.Query()["fechadesde"][0]
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
-		var p_importeretraccion string = r.URL.Query()["importeretraccion"][0]
+		var p_importedetraccion string = r.URL.Query()["importedetraccion"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
@@ -124,7 +124,7 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 		reducevalor := strconv.Itoa(strempresa.Reducevalor)
 		zonanombre := strempresa.Zonanombre
 
-		db.Raw("SELECT * FROM SP_EXPORTARTXTCARGASSOCIALESF931('" + p_fechadesde + "','" + p_fechahasta + "','" + actividad + "','" + tipodeempresa + "','" + zona + "','" + zonanombre + "','" + reducevalor + "','" + p_importeretraccion + "')").Scan(&exportartxtcargasocialesf931)
+		db.Raw("SELECT * FROM SP_EXPORTARTXTCARGASSOCIALESF931('" + p_fechadesde + "','" + p_fechahasta + "','" + actividad + "','" + tipodeempresa + "','" + zona + "','" + zonanombre + "','" + reducevalor + "','" + p_importedetraccion + "')").Scan(&exportartxtcargasocialesf931)
 
 		for i := 0; i < len(exportartxtcargasocialesf931); i++ {
 
