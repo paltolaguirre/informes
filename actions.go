@@ -58,6 +58,8 @@ func Healthy(writer http.ResponseWriter, request *http.Request) {
 }
 
 func InformeF931(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("La URL accedida: " + r.URL.String())
 	var informesf931 []Informef931
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
@@ -78,7 +80,7 @@ func InformeF931(w http.ResponseWriter, r *http.Request) {
 }
 
 func LibroSueldos(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("La URL accedida: " + r.URL.String())
 	var informeslibrossueldos []InformeLibroSueldos
 
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
@@ -100,7 +102,7 @@ func LibroSueldos(w http.ResponseWriter, r *http.Request) {
 }
 
 func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("La URL accedida: " + r.URL.String())
 	var exportartxtcargasocialesf931 []Exportartxtcargasocialesf931
 	var datosaexportartxtcargassocialesf931 Exportartxtcargasocialesf931
 
@@ -131,7 +133,7 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 			datosaexportartxtcargassocialesf931.Data = datosaexportartxtcargassocialesf931.Data + exportartxtcargasocialesf931[i].Data + "\n"
 
 		}
-		fmt.Println(datosaexportartxtcargassocialesf931)
+
 		framework.RespondJSON(w, http.StatusOK, datosaexportartxtcargassocialesf931)
 	}
 
