@@ -45,4 +45,10 @@ var routes = Routes{
 		"/api/informe/informes/libro-sueldos",
 		LibroSueldos,
 	},
+	Route{
+		"InformeF931ExportarTxt",
+		"GET",
+		"/api/informe/informes/cargas-sociales-f931-exportartxt",
+		InformeF931ExportarTxt,
+	},
 }
