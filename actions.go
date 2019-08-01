@@ -52,6 +52,16 @@ type Exportartxtcargasocialesf931 struct {
 	Data string `json:"data"`
 }
 
+type strLiquidacion struct {
+	Fechaliquidacion time.Time `json:"fechaliquidacion"`
+	Legajo           string    `json:"legajo"`
+	Nombre           string    `json:"nombre"`
+	Apellido         string    `json:"apellido"`
+	Periodo          time.Time `json:"periodo"`
+	Tipo             string    `json:"tipo"`
+	Total            float32   `json:"total"`
+}
+
 // Sirve para controlar si el server esta OK
 func Healthy(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("Healthy."))
@@ -81,8 +91,8 @@ func InformeF931(w http.ResponseWriter, r *http.Request) {
 
 func LibroSueldos(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("La URL accedida: " + r.URL.String())
-	var informeslibrossueldos []InformeLibroSueldos
 
+	var strLiquidaciones []strLiquidacion
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
@@ -94,9 +104,8 @@ func LibroSueldos(w http.ResponseWriter, r *http.Request) {
 
 		defer apiclientconexionbd.CerrarDB(db)
 
-		db.Raw("SELECT * FROM SP_INFORMELIBROSUELDOS('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&informeslibrossueldos)
-
-		framework.RespondJSON(w, http.StatusOK, informeslibrossueldos)
+		db.Raw("SELECT * FROM SP_INFORMELIBROSUELDOS('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strLiquidaciones)
+		framework.RespondJSON(w, http.StatusOK, strLiquidaciones)
 	}
 
 }

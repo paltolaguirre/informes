@@ -4,22 +4,37 @@
 
 CREATE OR REPLACE FUNCTION sp_informelibrosueldos(fechadesde date, fechahasta date )
   RETURNS TABLE(
-   legajo text,
    fecha timestamp,
-   concepto text,
-   importe numeric
+   legajo text,
+   nombre text,
+   apellido text,
+   periodo timestamp,
+   tipo text,
+   total numeric
   )AS
 $BODY$
 BEGIN	
+
 	RETURN QUERY 	
-			
-	 SELECT le.legajo,l.fecha::timestamp,c.nombre, importeunitario
-	 FROM liquidacion l
-	 LEFT JOIN legajo le ON le.id = l.legajoid
-	 LEFT JOIN sp_liquidacionconceptos() lc ON lc.liquidacionid = l.id
-	 LEFT JOIN sp_conceptos() c ON lc.conceptoid = c.id
-	 WHERE l.fecha BETWEEN fechadesde AND fechahasta
-	 ORDER BY le.nombre, l.fecha;
+
+	 WITH tmp_importeliquidacion AS (
+		SELECT li.id as liquidacionid, sum(ir.importeunitario) + sum(inr.importeunitario) - sum(r.importeunitario) -sum(d.importeunitario) as importeLiquidacion
+		FROM Liquidacion li
+		LEFT JOIN Retencion r ON r.liquidacionid = li.id
+		LEFT JOIN Descuento d ON d.liquidacionid = li.id
+		LEFT JOIN ImporteRemunerativo ir ON ir.liquidacionid = li.id
+		LEFT JOIN ImporteNoRemunerativo inr ON inr.liquidacionid = li.id
+		WHERE li.fecha BETWEEN fechadesde AND fechahasta
+		GROUP BY li.id
+	)
+
+	 
+	 SELECT li.fecha::timestamp as fechaLiquidacion,l.legajo as Legajo ,l.nombre as Nombre, l.apellido as Apellido, li.fechaperiodoliquidacion::timestamp as periodo ,li.tipo::text as tipo,importeLiquidacion as total
+	 FROM liquidacion li
+	 LEFT JOIN legajo l ON l.id = li.legajoid
+	 LEFT JOIN tmp_importeliquidacion il ON il.liquidacionid = li.id
+	 WHERE li.fecha BETWEEN fechadesde AND fechahasta
+	 ORDER BY li.fecha;
 
 END; $BODY$
   LANGUAGE plpgsql VOLATILE
