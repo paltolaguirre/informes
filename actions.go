@@ -14,6 +14,7 @@ import (
 	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
 	"github.com/xubiosueldos/framework"
 	"github.com/xubiosueldos/framework/configuracion"
+	//"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 var nombreMicroservicio string = "informes"
@@ -60,6 +61,20 @@ type strLiquidacion struct {
 	Periodo          time.Time `json:"periodo"`
 	Tipo             string    `json:"tipo"`
 	Total            float32   `json:"total"`
+}
+
+type strImpresionEncabezado struct {
+	Descripcion           string    `json:"descripcion"`
+	Razonsocialcuitnombre string    `json:"razonsocialcuitnombre"`
+	Domicilioempresa      string    `json:"domicilioempresa"`
+	Actividadempresa      string    `json:"actividadempresa"`
+	Desdehojanumero       string    `json:"desdehojanumero"`
+	Hastahojanumero       string    `json:hastahojanumero"`
+	Periodoliquidacion    time.Time `json:"periodoliquidacion"`
+}
+
+type strImpresionLiquidaciones struct {
+	//	Legajo structLegajo.Legajo `json:"legajo"`
 }
 
 // Sirve para controlar si el server esta OK
@@ -188,6 +203,60 @@ func obtenerDatosEmpleador(db *gorm.DB, r *http.Request) *strEmpresa {
 
 	return &strempresa
 
+}
+
+func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("La URL accedida: " + r.URL.String())
+
+	var strImpresionEncabezado strImpresionEncabezado
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
+
+		var p_fechadesde string = r.URL.Query()["fechadesde"][0]
+		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
+		var p_hojadesde string = r.URL.Query()["hojadesde"][0]
+		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
+
+		defer apiclientconexionbd.CerrarDB(db)
+
+		var strLiquidaciones []strLiquidacion
+		db.Raw("SELECT * FROM SP_INFORMELIBROSUELDOS('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strLiquidaciones)
+
+		strempresa := obtenerDatosEmpleador(db, r)
+		cuitEmpresa := strempresa.Cuit
+		nombreEmpresa := strempresa.Nombre
+		domicilioEmpresa := strempresa.Domicilio
+
+		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20744 (T.O.)"
+		strImpresionEncabezado.Razonsocialcuitnombre = "Razón Social " + cuitEmpresa + " " + nombreEmpresa
+		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
+		strImpresionEncabezado.Actividadempresa = "Falta nombre actividad"
+		strImpresionEncabezado.Desdehojanumero = p_hojadesde
+		strImpresionEncabezado.Hastahojanumero = p_hojahasta
+		strImpresionEncabezado.Periodoliquidacion = strLiquidaciones[0].Periodo
+
+		framework.RespondJSON(w, http.StatusOK, strImpresionEncabezado)
+	}
+}
+
+func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("La URL accedida: " + r.URL.String())
+
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
+
+		//var p_fechadesde string = r.URL.Query()["fechadesde"][0]
+		//var p_fechahasta string = r.URL.Query()["fechahasta"][0]
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
+
+		defer apiclientconexionbd.CerrarDB(db)
+
+	}
 }
 
 func AutomigrateTablasPrivadas(db *gorm.DB) {
