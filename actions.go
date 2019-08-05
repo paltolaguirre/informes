@@ -14,7 +14,6 @@ import (
 	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
 	"github.com/xubiosueldos/framework"
 	"github.com/xubiosueldos/framework/configuracion"
-	//"github.com/xubiosueldos/legajo/structLegajo"
 )
 
 var nombreMicroservicio string = "informes"
@@ -41,6 +40,7 @@ type strEmpresa struct {
 	Cuit                   string `json:"cuit"`
 	Tipodeempresa          int    `json:"tipodeempresa"`
 	Actividad              int    `json:"actividad"`
+	Actividadnombre        string `json:"actividadnombre"`
 	Zona                   int    `json:"zona"`
 	Zonanombre             string `json:"zonanombre"`
 	Obrasocial             int    `json:"obrasocial"`
@@ -64,17 +64,29 @@ type strLiquidacion struct {
 }
 
 type strImpresionEncabezado struct {
-	Descripcion           string    `json:"descripcion"`
-	Razonsocialcuitnombre string    `json:"razonsocialcuitnombre"`
-	Domicilioempresa      string    `json:"domicilioempresa"`
-	Actividadempresa      string    `json:"actividadempresa"`
-	Desdehojanumero       string    `json:"desdehojanumero"`
-	Hastahojanumero       string    `json:hastahojanumero"`
-	Periodoliquidacion    time.Time `json:"periodoliquidacion"`
+	Descripcion           string `json:"descripcion"`
+	Razonsocialcuitnombre string `json:"razonsocialcuitnombre"`
+	Domicilioempresa      string `json:"domicilioempresa"`
+	Actividadempresa      string `json:"actividadempresa"`
+	Desdehojanumero       string `json:"desdehojanumero"`
+	Hastahojanumero       string `json:"hastahojanumero"`
 }
 
 type strImpresionLiquidaciones struct {
-	//	Legajo structLegajo.Legajo `json:"legajo"`
+	Liquidacionid   int       `json:"liquidacionid"`
+	Legajo          string    `json:"legajo"`
+	Apellidonombre  string    `json:"apellidonombre"`
+	Cuil            string    `json:"cuil"`
+	Direccion       string    `json:"direccion"`
+	Fechaalta       time.Time `json:"fechaalta"`
+	Fechabaja       time.Time `json:"fechabaja"`
+	Categoria       string    `json:"categoria"`
+	Sueldojornal    float32   `json:"sueldojornal"`
+	Sueldoperiodo   time.Time `json:"sueldoperiodo"`
+	Contratacion    string    `json:"contratacion"`
+	Conceptonombre  string    `json:"conceptonombre"`
+	Conceptoimporte float32   `json:"conceptoimporte"`
+	Tipogrilla      string    `json:"tipogrilla"`
 }
 
 // Sirve para controlar si el server esta OK
@@ -212,8 +224,8 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		var p_fechadesde string = r.URL.Query()["fechadesde"][0]
-		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
+		//var p_fechadesde string = r.URL.Query()["fechadesde"][0]
+		//var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 		var p_hojadesde string = r.URL.Query()["hojadesde"][0]
 		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
 
@@ -222,21 +234,18 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 
 		defer apiclientconexionbd.CerrarDB(db)
 
-		var strLiquidaciones []strLiquidacion
-		db.Raw("SELECT * FROM SP_INFORMELIBROSUELDOS('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strLiquidaciones)
-
 		strempresa := obtenerDatosEmpleador(db, r)
 		cuitEmpresa := strempresa.Cuit
 		nombreEmpresa := strempresa.Nombre
 		domicilioEmpresa := strempresa.Domicilio
+		actividadEmpresa := strempresa.Actividadnombre
 
 		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20744 (T.O.)"
 		strImpresionEncabezado.Razonsocialcuitnombre = "Razón Social " + cuitEmpresa + " " + nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
-		strImpresionEncabezado.Actividadempresa = "Falta nombre actividad"
+		strImpresionEncabezado.Actividadempresa = actividadEmpresa
 		strImpresionEncabezado.Desdehojanumero = p_hojadesde
 		strImpresionEncabezado.Hastahojanumero = p_hojahasta
-		strImpresionEncabezado.Periodoliquidacion = strLiquidaciones[0].Periodo
 
 		framework.RespondJSON(w, http.StatusOK, strImpresionEncabezado)
 	}
@@ -244,17 +253,20 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 
 func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("La URL accedida: " + r.URL.String())
-
+	var strImpresionLiquidaciones []strImpresionLiquidaciones
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		//var p_fechadesde string = r.URL.Query()["fechadesde"][0]
-		//var p_fechahasta string = r.URL.Query()["fechahasta"][0]
+		var p_fechadesde string = r.URL.Query()["fechadesde"][0]
+		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
-
 		defer apiclientconexionbd.CerrarDB(db)
+
+		db.Raw("SELECT * FROM SP_IMPRESIONLIBROSUELDOSLIQUIDACIONES('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strImpresionLiquidaciones)
+
+		framework.RespondJSON(w, http.StatusOK, strImpresionLiquidaciones)
 
 	}
 }
