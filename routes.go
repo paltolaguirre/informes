@@ -45,4 +45,22 @@ var routes = Routes{
 		"/api/informe/informes/libro-sueldos",
 		LibroSueldos,
 	},
+	Route{
+		"InformeF931ExportarTxt",
+		"GET",
+		"/api/informe/informes/cargas-sociales-f931-exportartxt",
+		InformeF931ExportarTxt,
+	},
+	Route{
+		"ImpresionEncabezado",
+		"GET",
+		"/api/informe/informes/libro-sueldos/impresion-encabezado",
+		ImpresionEncabezado,
+	},
+	Route{
+		"ImpresionLiquidaciones",
+		"GET",
+		"/api/informe/informes/libro-sueldos/impresion-liquidaciones",
+		ImpresionLiquidaciones,
+	},
 }
