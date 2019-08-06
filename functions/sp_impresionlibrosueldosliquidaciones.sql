@@ -35,7 +35,7 @@ BEGIN
 	coalesce(l.categoria,'') as Categoria,
 	coalesce(l.remuneracion, 0.00) as Sueldojornal,
 	li.fechaperiodoliquidacion::timestamp as Sueldoperiodo,
-	coalesce(s.nombre, '') as Contratacion,
+	coalesce(mc.nombre, '') as Contratacion,
 	coalesce(c.nombre,'') as Conceptonombre,
 	coalesce( spliquidacion.importeunitario, 0.00) as Conceptoimporte,
 	spliquidacion.tipogrilla as Tipogrilla
@@ -43,7 +43,7 @@ BEGIN
 	INNER JOIN SP_LIQUIDACIONCONCEPTOS() spliquidacion ON li.id = spliquidacion.liquidacionid
 	INNER JOIN Legajo l ON li.legajoid = l.id
 	LEFT JOIN Concepto c ON spliquidacion.conceptoid = c.id
-	LEFT JOIN Situacion s ON l.situacionid = s.id
+	LEFT JOIN Modalidadcontratacion mc ON l.modalidadcontratacionid = mc.id
 	WHERE li.fecha BETWEEN fechadesde AND fechahasta
 	ORDER BY li.id,spliquidacion.tipogrilla;
 END; $BODY$
