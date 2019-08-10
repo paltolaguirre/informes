@@ -12,12 +12,14 @@ BEGIN
 		public.concepto.nombre
 		
 	   FROM public.concepto
+		 WHERE esimprimible = 1
 	
 	UNION ALL
 
 	SELECT concepto.id,
 	       concepto.nombre
-	FROM concepto;
+	FROM concepto
+	WHERE esimprimible = 1;
 
 END; $BODY$
   LANGUAGE plpgsql VOLATILE
