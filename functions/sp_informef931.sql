@@ -16,21 +16,21 @@ BEGIN
 	    retencion.conceptoid as conceptoid,
 	    retencion.importeunitario as importeunitario,
 	    retencion.liquidacionid as liquidacionid, 
-			'1' as tipogrilla as tipogrilla
+			'1' as tipogrilla
 	   FROM retencion
 	   UNION ALL
 	   SELECT aportepatronal.id as id,
 	   aportepatronal.conceptoid as conceptoid,
 	   aportepatronal.importeunitario as importeunitario,
 	   aportepatronal.liquidacionid as liquidacionid,
-			'5' as tipogrilla as tipogrilla
+			'5' as tipogrilla 
 	   FROM aportepatronal
 	)
 
 	 SELECT c.nombre, sum(importeunitario) as importe
 	 FROM liquidacion l
 	 LEFT JOIN tmp_conceptosRetencionesAportesPatronales tcrap ON tcrap.liquidacionid = l.id
-	 LEFT JOIN sp_conceptos() c ON lc.conceptoid = c.id
+	 INNER JOIN sp_conceptos() c ON tcrap.conceptoid = c.id
 	 WHERE l.fecha BETWEEN fechadesde AND fechahasta
 	 GROUP BY c.nombre, c.id;
 
