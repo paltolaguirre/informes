@@ -75,13 +75,13 @@ BEGIN
 	LEFT(coalesce((l.apellido || ' ' || l.nombre),'') || C_ESPACIOS, 30) AS NombreApellido,
 	RIGHT(C_ZEROS || coalesce(Count(co.id),0), 1) AS CantidadConyuge,
 	RIGHT(C_ZEROS || coalesce(Count(h.id),0), 2) AS CantidadHijos,
-	RIGHT(C_ZEROS || coalesce(l.situacionid *-1,0), 2) AS CodigoSituacion,
-	RIGHT(C_ZEROS || coalesce(l.condicionid,0), 2) AS CodigoCondicion,
+	RIGHT(C_ZEROS || coalesce(s.Codigo,0), 2) AS CodigoSituacion,
+	RIGHT(C_ZEROS || coalesce(cod.Codigo,0), 2) AS CodigoCondicion,
 	RIGHT(C_ZEROS || coalesce(actividad,''), 3) AS CodigoActividad,
 	RIGHT(C_ZEROS || coalesce(zona,''), 2) AS CodigoZona,
 	REPEAT('0', 5)::VARCHAR AS PorcentajeAporteAdicionalSS,
-	RIGHT(C_ZEROS || coalesce(l.modalidadcontratacionid *-1,0) , 3) AS CodigoModalidadContratacion,
-	RIGHT(C_ZEROS || coalesce(l.obrasocialid *-1,0), 6) AS CodigoObraSocial,
+	RIGHT(C_ZEROS || coalesce(mc.Codigo,0) , 3) AS CodigoModalidadContratacion,
+	RIGHT(C_ZEROS || coalesce(os.Codigo,0), 6) AS CodigoObraSocial,
 	RIGHT(C_ZEROS || coalesce(tca.cantidadadherentes,0), 2) AS CantidadAdherentes,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo + trt.importeNoRemunerativo - trt.importeRetencion,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionTotal,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible1,
@@ -94,13 +94,13 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible2,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
-	RIGHT(C_ZEROS || coalesce(l.condicionsiniestradoid,0), 2) AS CodigoSiniestrado,
+	RIGHT(C_ZEROS || coalesce(cs.Codigo,0), 2) AS CodigoSiniestrado,
 	RIGHT(C_ZEROS || coalesce(reducevalor,''), 1) AS CorrespondeReduccion,
 	REPEAT('0', 9)::VARCHAR AS CapitalRecomposicionLRT,
 	RIGHT(C_ZEROS || coalesce(tipodeempresa,''), 1) AS TipoEmpresa,
 	REPEAT('0', 9)::VARCHAR AS AporteAdicionalObraSocial,
 	'1'::VARCHAR AS Regimen,
-	RIGHT(C_ZEROS || coalesce(l.situacionid *-1,0), 2) AS SituacionRevista1,
+	RIGHT(C_ZEROS || coalesce(s.Codigo,0), 2) AS SituacionRevista1,
 	RIGHT(C_ZEROS || coalesce(date_part('day',l.fechaalta),0), 2) AS DiaInicioSituacionRevista1,
 	REPEAT('0', 2)::VARCHAR AS SituacionRevista2,
 	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista2,
@@ -133,6 +133,11 @@ BEGIN
 	INNER JOIN Liquidacion li ON li.legajoid = l.id
 	LEFT JOIN Conyuge co ON co.legajoid = l.id
 	LEFT JOIN Hijo h ON h.legajoid = l.id
+	LEFT JOIN Condicion cond ON l.condicionid = cond.id
+	LEFT JOIN CondicionSiniestrado cs ON l.condicionsiniestradoid = cs.id
+	LEFT JOIN Situacion s ON l.situacionid = s.id
+	LEFT JOIN ModalidadContratacion mc ON l.modalidadcontratacionid = mc.id
+	LEFT JOIN ObraSocial os ON l.obrasocialid = os.id
 	LEFT JOIN tmp_cantidadadherentes tca  ON tca.legajoid = l.id
 	LEFT JOIN tmp_remuneraciontotal trt ON trt.legajoid = l.id 
 	LEFT JOIN tmp_conceptoHoraExtra tche ON tche.legajoid = l.id
