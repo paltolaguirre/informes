@@ -251,7 +251,7 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
+func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("La URL accedida: " + r.URL.String())
 	var strImpresionLiquidaciones []strImpresionLiquidaciones
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
@@ -267,37 +267,6 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		db.Raw("SELECT * FROM SP_IMPRESIONLIBROSUELDOSLIQUIDACIONES('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strImpresionLiquidaciones)
 
 		framework.RespondJSON(w, http.StatusOK, strImpresionLiquidaciones)
-
-	}
-}*/
-
-func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("La URL accedida: " + r.URL.String())
-	var strImpresionLiquidaciones []strImpresionLiquidaciones
-	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
-	if tokenValido {
-
-		queries := r.URL.Query()
-
-		versionMicroservicio := obtenerVersionLiquidacion()
-		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, versionMicroservicio, AutomigrateTablasPrivadas)
-
-		//defer db.Close()
-		defer apiclientconexionbd.CerrarDB(db)
-
-		var liquidaciones []structLiquidacion.Liquidacion
-
-		if queries["fechadesde"] == nil && queries["fechahasta"] == nil {
-			db.Set("gorm:auto_preload", true).Find(&liquidaciones)
-		} else {
-			var p_fechadesde string = r.URL.Query()["fechadesde"][0]
-			var p_fechahasta string = r.URL.Query()["fechahasta"][0]
-			db.Set("gorm:auto_preload", true).Where("fechaperiodoliquidacion BETWEEN ? AND ?", p_fechadesde, p_fechahasta).Find(&liquidaciones)
-		}
-
-		framework.RespondJSON(w, http.StatusOK, liquidaciones)
 
 	}
 }
