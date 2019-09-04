@@ -39,8 +39,8 @@ BEGIN
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
 		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN sp_conceptos() spc ON ir.conceptoid = spc.id
-		WHERE spc.nombre ILIKE '%Horas Extras%' AND li.fecha BETWEEN fechadesde AND fechahasta
+		LEFT JOIN Concepto c ON ir.conceptoid = c.id
+		WHERE c.nombre ILIKE '%Horas Extras%' AND li.fecha BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 	tmp_conceptoSueldoAnualComplementario AS (
@@ -48,8 +48,8 @@ BEGIN
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
 		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN sp_conceptos() spc ON ir.conceptoid = spc.id
-		WHERE spc.nombre ILIKE '%Sueldo Anual Complementario%' AND li.fecha BETWEEN fechadesde AND fechahasta
+		LEFT JOIN concepto c ON ir.conceptoid = c.id
+		WHERE c.nombre ILIKE '%Sueldo Anual Complementario%' AND li.fecha BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 	tmp_conceptoVacaciones AS (
@@ -57,16 +57,16 @@ BEGIN
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
 		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN sp_conceptos() spc ON ir.conceptoid = spc.id
-		WHERE spc.nombre ILIKE '%Vacaciones%' AND li.fecha BETWEEN fechadesde AND fechahasta
+		LEFT JOIN concepto c ON ir.conceptoid = c.id
+		WHERE c.nombre ILIKE '%Vacaciones%' AND li.fecha BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 	tmp_cantidadHorasExtras AS (
 		SELECT l.id as legajoid, sum(n.cantidad) as cantidadHorasExtras
 		FROM Legajo l
 		INNER JOIN Novedad n ON n.legajoid = l.id
-		INNER JOIN sp_conceptos() spc ON n.conceptoid = spc.id
-		WHERE spc.nombre ILIKE '%Horas Extras%' 
+		INNER JOIN concepto c ON n.conceptoid = c.id
+		WHERE c.nombre ILIKE '%Horas Extras%' 
 		GROUP BY l.id
 	)
 	
@@ -75,13 +75,13 @@ BEGIN
 	LEFT(coalesce((l.apellido || ' ' || l.nombre),'') || C_ESPACIOS, 30) AS NombreApellido,
 	RIGHT(C_ZEROS || coalesce(Count(co.id),0), 1) AS CantidadConyuge,
 	RIGHT(C_ZEROS || coalesce(Count(h.id),0), 2) AS CantidadHijos,
-	RIGHT(C_ZEROS || coalesce(s.Codigo,0), 2) AS CodigoSituacion,
-	RIGHT(C_ZEROS || coalesce(cod.Codigo,0), 2) AS CodigoCondicion,
+	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS CodigoSituacion,
+	RIGHT(C_ZEROS || coalesce(cond.Codigo,''), 2) AS CodigoCondicion,
 	RIGHT(C_ZEROS || coalesce(actividad,''), 3) AS CodigoActividad,
 	RIGHT(C_ZEROS || coalesce(zona,''), 2) AS CodigoZona,
 	REPEAT('0', 5)::VARCHAR AS PorcentajeAporteAdicionalSS,
-	RIGHT(C_ZEROS || coalesce(mc.Codigo,0) , 3) AS CodigoModalidadContratacion,
-	RIGHT(C_ZEROS || coalesce(os.Codigo,0), 6) AS CodigoObraSocial,
+	RIGHT(C_ZEROS || coalesce(mc.Codigo,'') , 3) AS CodigoModalidadContratacion,
+	RIGHT(C_ZEROS || coalesce(os.Codigo,''), 6) AS CodigoObraSocial,
 	RIGHT(C_ZEROS || coalesce(tca.cantidadadherentes,0), 2) AS CantidadAdherentes,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo + trt.importeNoRemunerativo - trt.importeRetencion,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionTotal,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible1,
@@ -94,13 +94,13 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible2,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(trt.importeRemunerativo - trt.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
-	RIGHT(C_ZEROS || coalesce(cs.Codigo,0), 2) AS CodigoSiniestrado,
+	RIGHT(C_ZEROS || coalesce(cs.Codigo,''), 2) AS CodigoSiniestrado,
 	RIGHT(C_ZEROS || coalesce(reducevalor,''), 1) AS CorrespondeReduccion,
 	REPEAT('0', 9)::VARCHAR AS CapitalRecomposicionLRT,
 	RIGHT(C_ZEROS || coalesce(tipodeempresa,''), 1) AS TipoEmpresa,
 	REPEAT('0', 9)::VARCHAR AS AporteAdicionalObraSocial,
 	'1'::VARCHAR AS Regimen,
-	RIGHT(C_ZEROS || coalesce(s.Codigo,0), 2) AS SituacionRevista1,
+	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS SituacionRevista1,
 	RIGHT(C_ZEROS || coalesce(date_part('day',l.fechaalta),0), 2) AS DiaInicioSituacionRevista1,
 	REPEAT('0', 2)::VARCHAR AS SituacionRevista2,
 	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista2,
@@ -145,7 +145,7 @@ BEGIN
 	LEFT JOIN tmp_conceptoVacaciones tcv ON tcv.legajoid = l.id
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	WHERE li.fecha BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,l.situacionid,l.condicionid,tca.cantidadadherentes,trt.importeRemunerativo,trt.importeNoRemunerativo,trt.importeRetencion,trt.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,l.situacionid,l.condicionid,tca.cantidadadherentes,trt.importeRemunerativo,trt.importeNoRemunerativo,trt.importeRetencion,trt.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
 
 	RETURN QUERY
 		SELECT (

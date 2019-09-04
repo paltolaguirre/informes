@@ -30,7 +30,7 @@ BEGIN
 	 SELECT c.nombre, sum(importeunitario) as importe
 	 FROM liquidacion l
 	 LEFT JOIN tmp_conceptosRetencionesAportesPatronales tcrap ON tcrap.liquidacionid = l.id
-	 INNER JOIN sp_conceptos() c ON tcrap.conceptoid = c.id
+	 INNER JOIN concepto c ON tcrap.conceptoid = c.id
 	 WHERE l.fecha BETWEEN fechadesde AND fechahasta
 	 GROUP BY c.nombre, c.id;
 
