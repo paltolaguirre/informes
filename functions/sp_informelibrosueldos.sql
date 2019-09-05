@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE FUNCTION sp_informelibrosueldos(fechadesde date, fechahasta date )
   RETURNS TABLE(
-   fecha timestamp,
+   fechaliquidacion timestamp,
    legajo text,
    nombre text,
    apellido text,
