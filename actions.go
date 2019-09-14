@@ -105,8 +105,8 @@ func InformeF931(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
-
+		//db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		db.Raw("SELECT * FROM SP_INFORMEF931('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&informesf931)
@@ -127,7 +127,8 @@ func LibroSueldos(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		//db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 
 		defer apiclientconexionbd.CerrarDB(db)
 
@@ -150,8 +151,8 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 		var p_importedetraccion string = r.URL.Query()["importedetraccion"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
-
+		//db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		strempresa := obtenerDatosEmpleador(db, r)
@@ -230,8 +231,8 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
-
+		//db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		strempresa := obtenerDatosEmpleador(db, r)
@@ -261,7 +262,8 @@ func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		//db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1)
+		db := apiclientconexionbd.ObtenerDB(tenant)
 		defer apiclientconexionbd.CerrarDB(db)
 
 		db.Raw("SELECT * FROM SP_IMPRESIONLIBROSUELDOSLIQUIDACIONES('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strImpresionLiquidaciones)
