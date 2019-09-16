@@ -4,12 +4,11 @@
 
 CREATE OR REPLACE FUNCTION sp_informelibrosueldos(fechadesde date, fechahasta date )
   RETURNS TABLE(
-   fecha timestamp,
+   fechaliquidacion timestamp,
    legajo text,
    nombre text,
    apellido text,
    periodo timestamp,
-   tipo text,
    total numeric
   )AS
 $BODY$
@@ -29,7 +28,7 @@ BEGIN
 	)
 
 	 
-	 SELECT li.fecha::timestamp as fechaLiquidacion,l.legajo as Legajo ,l.nombre as Nombre, l.apellido as Apellido, li.fechaperiodoliquidacion::timestamp as periodo ,li.tipo::text as tipo,importeLiquidacion as total
+	 SELECT li.fecha::timestamp as fechaLiquidacion,l.legajo as Legajo ,l.nombre as Nombre, l.apellido as Apellido, li.fechaperiodoliquidacion::timestamp as periodo ,importeLiquidacion as total
 	 FROM liquidacion li
 	 LEFT JOIN legajo l ON l.id = li.legajoid
 	 LEFT JOIN tmp_importeliquidacion il ON il.liquidacionid = li.id
