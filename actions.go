@@ -11,7 +11,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
-	"github.com/xubiosueldos/conexionBD/apiclientconexionbd"
+	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework"
 	"github.com/xubiosueldos/framework/configuracion"
 )
@@ -105,9 +105,9 @@ func InformeF931(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		db.Raw("SELECT * FROM SP_INFORMEF931('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&informesf931)
 
@@ -127,9 +127,10 @@ func LibroSueldos(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+
+		defer conexionBD.CerrarDB(db)
 
 		db.Raw("SELECT * FROM SP_INFORMELIBROSUELDOS('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strLiquidaciones)
 		framework.RespondJSON(w, http.StatusOK, strLiquidaciones)
@@ -150,9 +151,9 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 		var p_importedetraccion string = r.URL.Query()["importedetraccion"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		strempresa := obtenerDatosEmpleador(db, r)
 
@@ -230,9 +231,9 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
 
-		defer apiclientconexionbd.CerrarDB(db)
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		strempresa := obtenerDatosEmpleador(db, r)
 		cuitEmpresa := strempresa.Cuit
@@ -261,16 +262,13 @@ func ImpresionLiquidaciones(w http.ResponseWriter, r *http.Request) {
 		var p_fechahasta string = r.URL.Query()["fechahasta"][0]
 
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
-		db := apiclientconexionbd.ObtenerDB(tenant, nombreMicroservicio, 1, AutomigrateTablasPrivadas)
-		defer apiclientconexionbd.CerrarDB(db)
+
+		db := conexionBD.ObtenerDB(tenant)
+		defer conexionBD.CerrarDB(db)
 
 		db.Raw("SELECT * FROM SP_IMPRESIONLIBROSUELDOSLIQUIDACIONES('" + p_fechadesde + "','" + p_fechahasta + "')").Scan(&strImpresionLiquidaciones)
 
 		framework.RespondJSON(w, http.StatusOK, strImpresionLiquidaciones)
 
 	}
-}
-
-func AutomigrateTablasPrivadas(db *gorm.DB) {
-
 }
