@@ -96,6 +96,8 @@ github.com/xubiosueldos/autenticacion v0.0.0-20190924132348-fe5009d5671c h1:iF9N
 github.com/xubiosueldos/autenticacion v0.0.0-20190924132348-fe5009d5671c/go.mod h1:MPS1AZGOza6U3FWuValBbyGiYxnSJu2Yr5jJedXBsyQ=
 github.com/xubiosueldos/autenticacion v0.0.0-20190926175324-b466b283d571 h1:/ApSj2mA8FcuMmEi6CQE6sQ6b9S5HS2Iv37iomj6MhM=
 github.com/xubiosueldos/autenticacion v0.0.0-20190926175324-b466b283d571/go.mod h1:R5r9ZiT2a3eNK8+ZXQM8aPJn0H/YzXbYftsxOiIiMgU=
+github.com/xubiosueldos/autenticacion v0.0.0-20191008115323-b721d50d5ee6 h1:agP8nxlZxyNUYjETRQIvAKuwD5GukFzDH7NzYNMeEQA=
+github.com/xubiosueldos/autenticacion v0.0.0-20191008115323-b721d50d5ee6/go.mod h1:Mnf15jFYM8FiEXnKjVq0Hq9qms1AHKBOiOVVGo2Wblk=
 github.com/xubiosueldos/conexionBD v0.0.0-20190522110449-6c03431f8a92/go.mod h1:zG7PxdxhIFS8hl3AymQLz+qM2ZoeyW/hx19wH2ysweg=
 github.com/xubiosueldos/conexionBD v0.0.0-20190530145544-4360fd597798/go.mod h1:Nsgq3PmfOoflh6TkjMU2RLAubRGke0GKTP6/V23rdek=
 github.com/xubiosueldos/conexionBD v0.0.0-20190611145917-669e94f96309/go.mod h1:8Z/rq1PZY8lGIpKkY3VKTxQxAE9dTQK1Ra9PuzTiFDU=
@@ -113,6 +115,8 @@ github.com/xubiosueldos/conexionBD v0.0.0-20190924131159-510ccbc76dcf h1:3TQIPpH
 github.com/xubiosueldos/conexionBD v0.0.0-20190924131159-510ccbc76dcf/go.mod h1:UU8Kkj74xg8kM7bVuVJx5ZFxPKho38yVlo78dVMFkMY=
 github.com/xubiosueldos/conexionBD v0.0.0-20190926175155-8d5381bf9a5f h1:8ZngJUVeT67wSwXHbcXaF3AchX/OSnWSH8OzCA02bkY=
 github.com/xubiosueldos/conexionBD v0.0.0-20190926175155-8d5381bf9a5f/go.mod h1:UU8Kkj74xg8kM7bVuVJx5ZFxPKho38yVlo78dVMFkMY=
+github.com/xubiosueldos/conexionBD v0.0.0-20191008114452-406415aaa1d1 h1:hCkFs+ao1lZjYjj/RJFDj8AUJCflhC8Ga5zKktXX9P0=
+github.com/xubiosueldos/conexionBD v0.0.0-20191008114452-406415aaa1d1/go.mod h1:jeo57E+wvI5Q21kKt/DhqL0fWzFNOuU5xlsmtO504zg=
 github.com/xubiosueldos/framework v0.0.0-20190509132521-6f92aa67ddd1/go.mod h1:txPj3GVjVoZeJnObRIBrzNFVDT7baf2VEpK3kCkpDWg=
 github.com/xubiosueldos/framework v0.0.0-20190523131541-5dfe865fb28f/go.mod h1:txPj3GVjVoZeJnObRIBrzNFVDT7baf2VEpK3kCkpDWg=
 github.com/xubiosueldos/framework v0.0.0-20190528205049-f5e7c42b2284/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
@@ -125,6 +129,8 @@ github.com/xubiosueldos/framework v0.0.0-20190813125641-bb1718a07434 h1:KfhoHdTz
 github.com/xubiosueldos/framework v0.0.0-20190813125641-bb1718a07434/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
 github.com/xubiosueldos/framework v0.0.0-20190923130327-27a81bc804ce h1:5Lxe2+4CzL0HJVJKfuvxS521sLFVi5h6EYCwDoHZOCs=
 github.com/xubiosueldos/framework v0.0.0-20190923130327-27a81bc804ce/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
+github.com/xubiosueldos/framework v0.0.0-20191002111857-52b12ef56c62 h1:39700bnGzWF139TDjBPFLMICs+1Tk306RVSjp1KCkEw=
+github.com/xubiosueldos/framework v0.0.0-20191002111857-52b12ef56c62/go.mod h1:YpPF+hDR5I/7906gpS7Tjz+/wJX5KJCVyUDAWXeeOds=
 github.com/xubiosueldos/legajo v1.0.0 h1:GCrlYMgDceGIaofSBvph4JYSxF84Mc2Rj/KIHLDAZUk=
 github.com/xubiosueldos/legajo v1.0.1-0.20190712182220-e058b76f91d0 h1:3HHi0BXlptroMmXz9AyYO6GoXXiEFiOQaaqG/Tn50Hw=
 github.com/xubiosueldos/legajo v1.0.1-0.20190712182220-e058b76f91d0/go.mod h1:nKaEM/qdMk19RBMw+pZuqw+eSfEcvlFRtVx1+tFAgLE=
