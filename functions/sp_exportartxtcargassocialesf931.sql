@@ -1,14 +1,14 @@
 -- Function: sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
 
--- DROP FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
+-- DROP FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric);
 
 CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, IN fechahasta date, IN actividad character varying, IN tipodeempresa character varying, IN zona character varying, IN zonanombre character varying, IN reducevalor character varying, IN importedetraccion numeric)
-  RETURNS TABLE(data text) 
-  AS $BODY$
+  RETURNS SETOF text AS
+$BODY$
 DECLARE
 	-- Constantes
-	C_ZEROS CONSTANT VARCHAR := '00000000000000000000';
-	C_ESPACIOS CONSTANT VARCHAR := '                 ';
+	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
+	C_ESPACIOS CONSTANT VARCHAR := '                                                  ';
 	
 BEGIN	
 	DROP TABLE IF EXISTS tt_FINAL;
