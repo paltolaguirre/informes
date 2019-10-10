@@ -1,19 +1,15 @@
 package main
 
 import (
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
 	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework"
-	"github.com/xubiosueldos/framework/configuracion"
+	"github.com/xubiosueldos/monoliticComunication"
 )
 
 var nombreMicroservicio string = "informes"
@@ -28,25 +24,6 @@ type InformeLibroSueldos struct {
 	Fechaperiodoliquidacion time.Time `json:"fechaperiodoliquidacion"`
 	Concepto                string    `json:"concepto"`
 	Importe                 float32   `json:"importe"`
-}
-
-type strEmpresa struct {
-	ID                     int    `json:"id"`
-	Nombre                 string `json:"nombre"`
-	Codigo                 string `json:"codigo"`
-	Descripcion            string `json:"descripcion"`
-	Domicilio              string `json:"domicilio"`
-	Localidad              string `json:"localidad"`
-	Cuit                   string `json:"cuit"`
-	Tipodeempresa          int    `json:"tipodeempresa"`
-	Actividad              int    `json:"actividad"`
-	Actividadnombre        string `json:"actividadnombre"`
-	Zona                   int    `json:"zona"`
-	Zonanombre             string `json:"zonanombre"`
-	Obrasocial             int    `json:"obrasocial"`
-	Artcontratada          int    `json:"artcontratada"`
-	Domiciliodeexplotacion string `json:"domiciliodeexplotacion"`
-	Reducevalor            int    `json:"reducevalor"`
 }
 
 type Exportartxtcargasocialesf931 struct {
@@ -155,7 +132,7 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
-		strempresa := obtenerDatosEmpleador(db, r)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
 
 		actividad := strconv.Itoa(strempresa.Actividad)
 		tipodeempresa := strconv.Itoa(strempresa.Tipodeempresa)
@@ -176,48 +153,6 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func obtenerDatosEmpleador(db *gorm.DB, r *http.Request) *strEmpresa {
-	var strempresa strEmpresa
-
-	config := configuracion.GetInstance()
-
-	url := configuracion.GetUrlMicroservicio(config.Puertomicroserviciohelpers) + "empresa/empresas"
-	req, err := http.NewRequest("GET", url, nil)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	header := r.Header.Get("Authorization")
-
-	req.Header.Add("Authorization", header)
-
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	res, err := http.DefaultClient.Do(req)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	fmt.Println("URL:", url)
-
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-
-	str := string(body)
-
-	json.Unmarshal([]byte(str), &strempresa)
-
-	return &strempresa
-
-}
-
 func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("La URL accedida: " + r.URL.String())
 
@@ -235,7 +170,7 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
-		strempresa := obtenerDatosEmpleador(db, r)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
 		cuitEmpresa := strempresa.Cuit
 		nombreEmpresa := strempresa.Nombre
 		domicilioEmpresa := strempresa.Domicilio
