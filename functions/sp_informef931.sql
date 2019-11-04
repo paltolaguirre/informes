@@ -31,7 +31,7 @@ BEGIN
 	 FROM liquidacion l
 	 LEFT JOIN tmp_conceptosRetencionesAportesPatronales tcrap ON tcrap.liquidacionid = l.id
 	 INNER JOIN concepto c ON tcrap.conceptoid = c.id
-	 WHERE l.fecha BETWEEN fechadesde AND fechahasta
+	 WHERE l.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
 	 GROUP BY c.nombre, c.id;
 
 END; $BODY$
