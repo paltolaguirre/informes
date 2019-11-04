@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, 
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
-	C_ESPACIOS CONSTANT VARCHAR := '                                                  ';
+	C_ESPACIOS CONSTANT VARCHAR := '                                                                        ';
 	
 BEGIN	
 	DROP TABLE IF EXISTS tt_FINAL;
@@ -94,7 +94,7 @@ BEGIN
 	SELECT 	
 	RIGHT(C_ZEROS || coalesce(l.cuil,''), 11) AS Cuil,
 	LEFT(coalesce((l.apellido || ' ' || l.nombre),'') || C_ESPACIOS, 30) AS NombreApellido,
-	RIGHT(C_ZEROS || coalesce(co.cantidadConyuge,0), 1) AS CantidadConyuge,
+	CASE WHEN coalesce(co.cantidadConyuge,0) = 0 THEN 'F' ELSE 'T' END AS CantidadConyuge,
 	RIGHT(C_ZEROS || coalesce(h.cantidadHijos,0), 2) AS CantidadHijos,
 	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS CodigoSituacion,
 	RIGHT(C_ZEROS || coalesce(cond.Codigo,''), 2) AS CodigoCondicion,
@@ -116,7 +116,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tit.importeRemunerativo - tit.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tit.importeRemunerativo - tit.importeDescuento,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
 	RIGHT(C_ZEROS || coalesce(cs.Codigo,''), 2) AS CodigoSiniestrado,
-	RIGHT(C_ZEROS || coalesce(reducevalor,''), 1) AS CorrespondeReduccion,
+	CASE WHEN coalesce(reducevalor,'') = '0' THEN 'F' ELSE 'T' END AS CorrespondeReduccion,
 	REPEAT('0', 9)::VARCHAR AS CapitalRecomposicionLRT,
 	RIGHT(C_ZEROS || coalesce(tipodeempresa,''), 1) AS TipoEmpresa,
 	REPEAT('0', 9)::VARCHAR AS AporteAdicionalObraSocial,
@@ -134,7 +134,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcv.importeVacaciones,2), 0.00)::VARCHAR, '.', ','), 12) AS Vacaciones,
 	RIGHT(C_ZEROS || '30' , 9) AS CantidadDiasTrabajados,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tit.importeRemunerativo - tit.importeDescuento,2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible5,
-	'1'::VARCHAR AS TrabajadorConvencionado,
+	'0'::VARCHAR AS TrabajadorConvencionado,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tit.importeRemunerativo - tit.importeDescuento,2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible6,
 	REPEAT('0', 1)::VARCHAR AS TipoOperacion,
 	REPEAT('0', 12)::VARCHAR AS Adicionales,
@@ -166,7 +166,7 @@ BEGIN
 	LEFT JOIN tmp_conceptoVacaciones tcv ON tcv.legajoid = l.id
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,tit.importeRemunerativo,tit.importeNoRemunerativo,tit.importeRetencion,tit.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,tit.importeRemunerativo,tit.importeNoRemunerativo,tit.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
 
 	RETURN QUERY
 		SELECT (
