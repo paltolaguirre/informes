@@ -128,6 +128,8 @@ github.com/xubiosueldos/conexionBD v0.0.0-20191007114603-0805e36966ce h1:rRfiD9s
 github.com/xubiosueldos/conexionBD v0.0.0-20191007114603-0805e36966ce/go.mod h1:UU8Kkj74xg8kM7bVuVJx5ZFxPKho38yVlo78dVMFkMY=
 github.com/xubiosueldos/conexionBD v0.0.0-20191009124729-d6366b16e817 h1:dscjYFMeOj8R1axgRRVXk8a1cX5DbgrL0YQ0yWREsm4=
 github.com/xubiosueldos/conexionBD v0.0.0-20191009124729-d6366b16e817/go.mod h1:jeo57E+wvI5Q21kKt/DhqL0fWzFNOuU5xlsmtO504zg=
+github.com/xubiosueldos/conexionBD v0.0.0-20191101213625-139a75b436f3 h1:KpYiDvJ/Mtm+1ZmOrW9/nmzKn/Tnu4owEoIYXMUwuP4=
+github.com/xubiosueldos/conexionBD v0.0.0-20191101213625-139a75b436f3/go.mod h1:jeo57E+wvI5Q21kKt/DhqL0fWzFNOuU5xlsmtO504zg=
 github.com/xubiosueldos/framework v0.0.0-20190509132521-6f92aa67ddd1/go.mod h1:txPj3GVjVoZeJnObRIBrzNFVDT7baf2VEpK3kCkpDWg=
 github.com/xubiosueldos/framework v0.0.0-20190523131541-5dfe865fb28f/go.mod h1:txPj3GVjVoZeJnObRIBrzNFVDT7baf2VEpK3kCkpDWg=
 github.com/xubiosueldos/framework v0.0.0-20190528205049-f5e7c42b2284/go.mod h1:Atdymo+Iri+Mn8+VPhqIyb6dW/S/q3xPgobPRPBirzs=
@@ -153,6 +155,8 @@ github.com/xubiosueldos/monoliticComunication v0.0.0-20191009103547-93bac6ed9a87
 github.com/xubiosueldos/monoliticComunication v0.0.0-20191009103547-93bac6ed9a87/go.mod h1:yVyZFNnBjREO3UeByL+/d9jpnAZmOceKMoJVkh3IkKM=
 github.com/xubiosueldos/monoliticComunication v0.0.0-20191009130034-e9e75dc548ad h1:ssqX4bH7qOxuI6mzo2+OtinM+FzD2IAvekBVsmRgRH8=
 github.com/xubiosueldos/monoliticComunication v0.0.0-20191009130034-e9e75dc548ad/go.mod h1:ojzRXJu7fPyPhoDMClFBCOKff2mN4JiuQwP0HCJ6kTY=
+github.com/xubiosueldos/monoliticComunication v0.0.0-20191101215429-3cf643cf0420 h1:nRyEWshdxkqmO5adB+BA7VqRCqDpzOq9Dt620wnxEHc=
+github.com/xubiosueldos/monoliticComunication v0.0.0-20191101215429-3cf643cf0420/go.mod h1:OQQXieDVZAXoYMMbhX5h4U0D6pduQppARODuRnnGCow=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=

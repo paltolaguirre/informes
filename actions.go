@@ -134,9 +134,9 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 
 		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
 
-		actividad := strconv.Itoa(strempresa.Actividad)
+		actividad := strempresa.Actividad
 		tipodeempresa := strconv.Itoa(strempresa.Tipodeempresa)
-		zona := strconv.Itoa(strempresa.Zona)
+		zona := strempresa.Zona
 		reducevalor := strconv.Itoa(strempresa.Reducevalor)
 		zonanombre := strempresa.Zonanombre
 
