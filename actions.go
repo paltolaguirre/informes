@@ -41,12 +41,13 @@ type strLiquidacion struct {
 }
 
 type strImpresionEncabezado struct {
-	Descripcion           string `json:"descripcion"`
-	Razonsocialcuitnombre string `json:"razonsocialcuitnombre"`
-	Domicilioempresa      string `json:"domicilioempresa"`
-	Actividadempresa      string `json:"actividadempresa"`
-	Desdehojanumero       string `json:"desdehojanumero"`
-	Hastahojanumero       string `json:"hastahojanumero"`
+	Descripcion       string `json:"descripcion"`
+	Razonsocialnombre string `json:"razonsocialnombre"`
+	Domicilioempresa  string `json:"domicilioempresa"`
+	Actividadempresa  string `json:"actividadempresa"`
+	Cuitempresa       string `json:"cuitempresa"`
+	Desdehojanumero   string `json:"desdehojanumero"`
+	Hastahojanumero   string `json:"hastahojanumero"`
 }
 
 type strImpresionLiquidaciones struct {
@@ -176,10 +177,11 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		domicilioEmpresa := strempresa.Domicilio
 		actividadEmpresa := strempresa.Actividadnombre
 
-		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20744 (T.O.)"
-		strImpresionEncabezado.Razonsocialcuitnombre = cuitEmpresa + " " + nombreEmpresa
+		strImpresionEncabezado.Descripcion = "Habilitación del registro de hojas móviles en reemplazo del libro especial Art. 52 LEY 20.744 (T.O.)"
+		strImpresionEncabezado.Razonsocialnombre = nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
 		strImpresionEncabezado.Actividadempresa = actividadEmpresa
+		strImpresionEncabezado.Cuitempresa = cuitEmpresa
 		strImpresionEncabezado.Desdehojanumero = p_hojadesde
 		strImpresionEncabezado.Hastahojanumero = p_hojahasta
 
