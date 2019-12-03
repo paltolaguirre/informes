@@ -177,7 +177,7 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		domicilioEmpresa := strempresa.Domicilio
 		actividadEmpresa := strempresa.Actividadnombre
 
-		strImpresionEncabezado.Descripcion = "Habilitación del registro de hojas móviles en reemplazo del libro especial Art. 52 LEY 20.744 (T.O.)"
+		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20.744 (T.O.)"
 		strImpresionEncabezado.Razonsocialnombre = nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
 		strImpresionEncabezado.Actividadempresa = actividadEmpresa
