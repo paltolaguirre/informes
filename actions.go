@@ -41,11 +41,11 @@ type strLiquidacion struct {
 }
 
 type strImpresionEncabezado struct {
-	Descripcion       string `json:"descripcion"`
-	Razonsocialnombre string `json:"razonsocialnombre"`
-	Domicilioempresa  string `json:"domicilioempresa"`
-	Actividadempresa  string `json:"actividadempresa"`
-	Cuitempresa       string `json:"cuitempresa"`
+	Descripcion      string `json:"descripcion"`
+	Nombreempresa    string `json:"nombreempresa"`
+	Domicilioempresa string `json:"domicilioempresa"`
+	Actividadempresa string `json:"actividadempresa"`
+	Cuitempresa      string `json:"cuitempresa"`
 }
 
 type strImpresionLiquidaciones struct {
@@ -171,7 +171,7 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		actividadEmpresa := strempresa.Actividadnombre
 
 		strImpresionEncabezado.Descripcion = "Habilitación del registro de hojas móviles en reemplazo del libro especial Art. 52 LEY 20.744 (T.O.)"
-		strImpresionEncabezado.Razonsocialnombre = nombreEmpresa
+		strImpresionEncabezado.Nombreempresa = nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
 		strImpresionEncabezado.Actividadempresa = actividadEmpresa
 		strImpresionEncabezado.Cuitempresa = cuitEmpresa
