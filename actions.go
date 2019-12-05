@@ -46,8 +46,6 @@ type strImpresionEncabezado struct {
 	Domicilioempresa  string `json:"domicilioempresa"`
 	Actividadempresa  string `json:"actividadempresa"`
 	Cuitempresa       string `json:"cuitempresa"`
-	Desdehojanumero   string `json:"desdehojanumero"`
-	Hastahojanumero   string `json:"hastahojanumero"`
 }
 
 type strImpresionLiquidaciones struct {
@@ -161,11 +159,6 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		//var p_fechadesde string = r.URL.Query()["fechadesde"][0]
-		//var p_fechahasta string = r.URL.Query()["fechahasta"][0]
-		var p_hojadesde string = r.URL.Query()["hojadesde"][0]
-		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
 		db := conexionBD.ObtenerDB(tenant)
@@ -177,13 +170,11 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		domicilioEmpresa := strempresa.Domicilio
 		actividadEmpresa := strempresa.Actividadnombre
 
-		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20.744 (T.O.)"
+		strImpresionEncabezado.Descripcion = "Habilitación del registro de hojas móviles en reemplazo del libro especial Art. 52 LEY 20.744 (T.O.)"
 		strImpresionEncabezado.Razonsocialnombre = nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
 		strImpresionEncabezado.Actividadempresa = actividadEmpresa
 		strImpresionEncabezado.Cuitempresa = cuitEmpresa
-		strImpresionEncabezado.Desdehojanumero = p_hojadesde
-		strImpresionEncabezado.Hastahojanumero = p_hojahasta
 
 		framework.RespondJSON(w, http.StatusOK, strImpresionEncabezado)
 	}
