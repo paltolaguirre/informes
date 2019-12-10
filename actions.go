@@ -41,12 +41,11 @@ type strLiquidacion struct {
 }
 
 type strImpresionEncabezado struct {
-	Descripcion           string `json:"descripcion"`
-	Razonsocialcuitnombre string `json:"razonsocialcuitnombre"`
-	Domicilioempresa      string `json:"domicilioempresa"`
-	Actividadempresa      string `json:"actividadempresa"`
-	Desdehojanumero       string `json:"desdehojanumero"`
-	Hastahojanumero       string `json:"hastahojanumero"`
+	Descripcion      string `json:"descripcion"`
+	Nombreempresa    string `json:"nombreempresa"`
+	Domicilioempresa string `json:"domicilioempresa"`
+	Actividadempresa string `json:"actividadempresa"`
+	Cuitempresa      string `json:"cuitempresa"`
 }
 
 type strImpresionLiquidaciones struct {
@@ -160,11 +159,6 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
 	if tokenValido {
 
-		//var p_fechadesde string = r.URL.Query()["fechadesde"][0]
-		//var p_fechahasta string = r.URL.Query()["fechahasta"][0]
-		var p_hojadesde string = r.URL.Query()["hojadesde"][0]
-		var p_hojahasta string = r.URL.Query()["hojahasta"][0]
-
 		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
 
 		db := conexionBD.ObtenerDB(tenant)
@@ -176,12 +170,11 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		domicilioEmpresa := strempresa.Domicilio
 		actividadEmpresa := strempresa.Actividadnombre
 
-		strImpresionEncabezado.Descripcion = "HABILITACION DEL REGISTRO DE HOJAS MOVILES EN REEMPLAZO DEL LIBRO ESPECIAL ART. 52 LEY 20744 (T.O.)"
-		strImpresionEncabezado.Razonsocialcuitnombre = cuitEmpresa + " " + nombreEmpresa
+		strImpresionEncabezado.Descripcion = "Habilitación del registro de hojas móviles en reemplazo del libro especial Art. 52 LEY 20.744 (T.O.)"
+		strImpresionEncabezado.Nombreempresa = nombreEmpresa
 		strImpresionEncabezado.Domicilioempresa = domicilioEmpresa
 		strImpresionEncabezado.Actividadempresa = actividadEmpresa
-		strImpresionEncabezado.Desdehojanumero = p_hojadesde
-		strImpresionEncabezado.Hastahojanumero = p_hojahasta
+		strImpresionEncabezado.Cuitempresa = cuitEmpresa
 
 		framework.RespondJSON(w, http.StatusOK, strImpresionEncabezado)
 	}
