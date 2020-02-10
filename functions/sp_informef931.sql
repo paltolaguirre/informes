@@ -11,28 +11,20 @@ $BODY$
 BEGIN	
 	RETURN QUERY 			
 
-  WITH tmp_conceptosRetencionesAportesPatronales AS(
-      SELECT retencion.id as id,
-	    retencion.conceptoid as conceptoid,
-	    retencion.importeunitario as importeunitario,
-	    retencion.liquidacionid as liquidacionid, 
-			'1' as tipogrilla
-	   FROM retencion
-	   UNION ALL
-	   SELECT aportepatronal.id as id,
-	   aportepatronal.conceptoid as conceptoid,
-	   aportepatronal.importeunitario as importeunitario,
-	   aportepatronal.liquidacionid as liquidacionid,
-			'5' as tipogrilla 
-	   FROM aportepatronal
+	WITH tmp_conceptosRetencionesAportesPatronales AS (
+		SELECT liqitem.id as id, liqitem.conceptoid as conceptoid, liqitem.importeunitario as importeunitario, liqitem.liquidacionid as liquidacionid, c.nombre as nombreconcepto
+		FROM Liquidacion li
+		LEFT JOIN Liquidacionitem liqitem ON li.id = liqitem.liquidacionid
+		INNER JOIN concepto c ON liqitem.conceptoid = c.id
+		WHERE c.tipoconceptoid = -4 OR c.tipoconceptoid = -5 
+		GROUP BY li.id, liqitem.id, c.nombre
 	)
-
-	 SELECT c.nombre, sum(importeunitario) as importe
+  
+	 SELECT tcrap.nombreconcepto, sum(importeunitario) as importe
 	 FROM liquidacion l
 	 LEFT JOIN tmp_conceptosRetencionesAportesPatronales tcrap ON tcrap.liquidacionid = l.id
-	 INNER JOIN concepto c ON tcrap.conceptoid = c.id
 	 WHERE l.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
-	 GROUP BY c.nombre, c.id;
+	 GROUP BY tcrap.nombreconcepto, tcrap.conceptoid;
 
 END; $BODY$
   LANGUAGE plpgsql VOLATILE
