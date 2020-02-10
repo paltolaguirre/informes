@@ -1,10 +1,7 @@
--- Function: sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
-
--- DROP FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric);
-
-CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, IN fechahasta date, IN actividad character varying, IN tipodeempresa character varying, IN zona character varying, IN zonanombre character varying, IN reducevalor character varying, IN importedetraccion numeric)
- RETURNS TABLE(data text) 
- AS $BODY$
+CREATE OR REPLACE FUNCTION public.sp_exportartxtcargassocialesf931(fechadesde date, fechahasta date, actividad character varying, tipodeempresa character varying, zona character varying, zonanombre character varying, reducevalor character varying, importedetraccion numeric)
+ RETURNS TABLE(data text)
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
@@ -252,9 +249,5 @@ BEGIN
 		FROM tt_FINAL;
 	
 
-END; $BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100
-  ROWS 1000;
-ALTER FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
-  OWNER TO postgres;
+END; $function$
+;
