@@ -1,10 +1,7 @@
--- Function: sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
-
--- DROP FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric);
-
-CREATE OR REPLACE FUNCTION sp_exportartxtcargassocialesf931(IN fechadesde date, IN fechahasta date, IN actividad character varying, IN tipodeempresa character varying, IN zona character varying, IN zonanombre character varying, IN reducevalor character varying, IN importedetraccion numeric)
- RETURNS TABLE(data text) 
- AS $BODY$
+CREATE OR REPLACE FUNCTION public.sp_exportartxtcargassocialesf931(fechadesde date, fechahasta date, actividad character varying, tipodeempresa character varying, zona character varying, zonanombre character varying, reducevalor character varying, importedetraccion numeric)
+ RETURNS TABLE(data text)
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
@@ -37,47 +34,66 @@ BEGIN
 		GROUP BY legajoid-- and legajoid = 'xxx'
 	),
 	
-	tmp_importestotales AS(
+	tmp_importesRemunerativos AS(
 		SELECT l.id as legajoid, 
-		coalesce(sum(ir.importeunitario),0.00) as importeRemunerativo,
-		coalesce(sum(inr.importeunitario),0.00) as importeNoRemunerativo, 
-		coalesce(sum(d.importeunitario),0.00) as importeDescuento
+		coalesce(sum(liqit.importeunitario),0.00) as importeRemunerativo
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
-		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN ImporteNoRemunerativo inr ON li.id = inr.liquidacionid
-		LEFT JOIN Descuento d ON li.id = d.liquidacionid
-		WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		INNER JOIN Concepto c ON c.id = liqit.conceptoid
+		WHERE c.tipoconceptoid = -1 AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
+		GROUP BY l.id
+	),
+
+		tmp_importesNoRemunerativos AS(
+		SELECT l.id as legajoid, 
+		coalesce(sum(liqit.importeunitario),0.00) as importeNoRemunerativo
+		FROM Legajo l
+		INNER JOIN Liquidacion li ON li.legajoid = l.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		INNER JOIN Concepto c ON c.id = liqit.conceptoid
+		WHERE c.tipoconceptoid = -2 AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
+		GROUP BY l.id
+	),
+
+		tmp_importesDescuentos AS(
+		SELECT l.id as legajoid, 
+		coalesce(sum(liqit.importeunitario),0.00) as importeDescuento
+		FROM Legajo l
+		INNER JOIN Liquidacion li ON li.legajoid = l.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		INNER JOIN Concepto c ON c.id = liqit.conceptoid
+		WHERE c.tipoconceptoid = -3 AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 
 	tmp_conceptoHoraExtra AS (
 		SELECT l.id as legajoid, 
-		coalesce(sum(ir.importeunitario),0.00) as importeHorasExtras
+		coalesce(sum(liqit.importeunitario),0.00) as importeHorasExtras
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
-		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN Concepto c ON ir.conceptoid = c.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		LEFT JOIN Concepto c ON liqit.conceptoid = c.id
 		WHERE c.nombre = 'Horas Extras 50%' OR c.nombre = 'Horas Extras 100%' AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 	tmp_conceptoSueldoAnualComplementario AS (
 		SELECT l.id as legajoid, 
-		coalesce(sum(ir.importeunitario),0.00) as importeSueldoAnualComplementario
+		coalesce(sum(liqit.importeunitario),0.00) as importeSueldoAnualComplementario
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
-		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN concepto c ON ir.conceptoid = c.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		LEFT JOIN concepto c ON liqit.conceptoid = c.id
 		WHERE c.nombre = 'Sueldo Anual Complementario' AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
 	tmp_conceptoVacaciones AS (
 		SELECT l.id as legajoid, 
-		coalesce(sum(ir.importeunitario),0.00) as importeVacaciones
+		coalesce(sum(liqit.importeunitario),0.00) as importeVacaciones
 		FROM Legajo l
 		INNER JOIN Liquidacion li ON li.legajoid = l.id
-		LEFT JOIN ImporteRemunerativo ir ON li.id = ir.liquidacionid
-		LEFT JOIN concepto c ON ir.conceptoid = c.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		LEFT JOIN concepto c ON liqit.conceptoid = c.id
 		WHERE c.nombre = 'Vacaciones' AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
 		GROUP BY l.id
 	),
@@ -104,17 +120,17 @@ BEGIN
 	RIGHT(C_ZEROS || coalesce(mc.Codigo,'') , 3) AS CodigoModalidadContratacion,
 	RIGHT(C_ZEROS || coalesce(os.Codigo,''), 6) AS CodigoObraSocial,
 	RIGHT(C_ZEROS || coalesce(tca.cantidadadherentes,0), 2) AS CantidadAdherentes,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) + coalesce(tit.importeNoRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionTotal,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible1,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) + coalesce(inr.importeNoRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionTotal,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible1,
 	REPEAT('0', 9)::VARCHAR AS AsignacionesFamiliaresPagadas,
 	REPEAT('0', 9)::VARCHAR AS ImporteAporteVoluntario,
 	REPEAT('0', 9)::VARCHAR AS ImporteAdicionalOS,
 	REPEAT('0', 9)::VARCHAR AS ImporteExcedenteAportesSS,
 	REPEAT('0', 9)::VARCHAR AS ImporteExcedenteAportesOS,
 	LEFT(coalesce(zonanombre,'') || C_ESPACIOS, 50) AS ProvinciaLocalidad,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible2,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible2,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
 	RIGHT(C_ZEROS || coalesce(cs.Codigo,''), 2) AS CodigoSiniestrado,
 	CASE WHEN coalesce(reducevalor,'') = '0' THEN 'F' ELSE 'T' END AS CorrespondeReduccion,
 	REPEAT('0', 9)::VARCHAR AS CapitalRecomposicionLRT,
@@ -127,25 +143,25 @@ BEGIN
 	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista2,
 	REPEAT('0', 2)::VARCHAR AS SituacionRevista3,
 	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista3,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tcsac.importeSueldoAnualComplementario,0.00) - coalesce(tche.importeHorasExtras,0.00) - coalesce(tcv.importeVacaciones,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS SueldoMasAdicionales,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(tcsac.importeSueldoAnualComplementario,0.00) - coalesce(tche.importeHorasExtras,0.00) - coalesce(tcv.importeVacaciones,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS SueldoMasAdicionales,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcsac.importeSueldoAnualComplementario,2), 0.00)::VARCHAR, '.', ','), 12) AS Sac,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tche.importeHorasExtras,2), 0.00)::VARCHAR, '.', ','), 12) AS HorasExtras,
 	REPEAT('0', 12)::VARCHAR AS ZonaDesfavorable,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcv.importeVacaciones,2), 0.00)::VARCHAR, '.', ','), 12) AS Vacaciones,
 	RIGHT(C_ZEROS || '30' , 9) AS CantidadDiasTrabajados,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible5,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible5,
 	'0'::VARCHAR AS TrabajadorConvencionado,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible6,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible6,
 	REPEAT('0', 1)::VARCHAR AS TipoOperacion,
 	REPEAT('0', 12)::VARCHAR AS Adicionales,
 	REPEAT('0', 12)::VARCHAR AS Premios,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible8,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible7,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible8,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible7,
 	RIGHT(C_ZEROS || coalesce(tcanthe.cantidadHorasExtras,0), 3) AS CantidadHorasExtras,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(tit.importeNoRemunerativo,2), 0.00)::VARCHAR, '.', ','), 12) AS ConceptosNoRemunerativos,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(inr.importeNoRemunerativo,2), 0.00)::VARCHAR, '.', ','), 12) AS ConceptosNoRemunerativos,
 	REPEAT('0', 12)::VARCHAR AS Maternidad,
 	REPEAT('0', 9)::VARCHAR AS RectificacionRemuneracion,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(tit.importeRemunerativo,0.00) + coalesce(tit.importeNoRemunerativo,0.00) - coalesce(tit.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible9,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) + coalesce(inr.importeNoRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible9,
 	REPEAT('0', 9)::VARCHAR AS ContribucionTareaDiferencial,
 	REPEAT('0', 3)::VARCHAR AS HorasTrabajadas,
 	'T'::VARCHAR AS SeguroColectivoDeVidaObligatorio,
@@ -160,13 +176,15 @@ BEGIN
 	LEFT JOIN ModalidadContratacion mc ON l.modalidadcontratacionid = mc.id
 	LEFT JOIN ObraSocial os ON l.obrasocialid = os.id
 	LEFT JOIN tmp_cantidadadherentes tca  ON tca.legajoid = l.id
-	LEFT JOIN tmp_importestotales tit ON tit.legajoid = l.id 
+	LEFT JOIN tmp_importesRemunerativos ir ON ir.legajoid = l.id
+	LEFT JOIN tmp_importesNoRemunerativos inr ON inr.legajoid = l.id
+	LEFT JOIN tmp_importesDescuentos id ON id.legajoid = l.id 
 	LEFT JOIN tmp_conceptoHoraExtra tche ON tche.legajoid = l.id
 	LEFT JOIN tmp_conceptoSueldoAnualComplementario tcsac ON tcsac.legajoid = l.id
 	LEFT JOIN tmp_conceptoVacaciones tcv ON tcv.legajoid = l.id
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,tit.importeRemunerativo,tit.importeNoRemunerativo,tit.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
 
 	RETURN QUERY
 		SELECT (
@@ -231,9 +249,5 @@ BEGIN
 		FROM tt_FINAL;
 	
 
-END; $BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100
-  ROWS 1000;
-ALTER FUNCTION sp_exportartxtcargassocialesf931(date, date, character varying, character varying, character varying, character varying, character varying, numeric)
-  OWNER TO postgres;
+END; $function$
+;
