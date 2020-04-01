@@ -105,8 +105,18 @@ BEGIN
 		INNER JOIN concepto c ON n.conceptoid = c.id
 		WHERE c.nombre = 'Horas Extras 50%' OR c.nombre = 'Horas Extras 100%'
 		GROUP BY l.id
+	),
+	tmp_conceptoIncrementoSalarialDto14_20 AS (
+		SELECT l.id as legajoid, 
+		coalesce(sum(liqit.importeunitario),0.00) as importeIncrementoSalarialDto14_20
+		FROM Legajo l
+		INNER JOIN Liquidacion li ON li.legajoid = l.id
+		LEFT JOIN Liquidacionitem liqit ON li.id = liqit.liquidacionid
+		LEFT JOIN concepto c ON liqit.conceptoid = c.id
+		WHERE c.nombre = 'Incremento Salarial Dto 14/20' AND li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta
+		GROUP BY l.id
 	)
-	
+
 	SELECT 	
 	RIGHT(C_ZEROS || coalesce(l.cuil,''), 11) AS Cuil,
 	LEFT(coalesce((l.apellido || ' ' || l.nombre),'') || C_ESPACIOS, 30) AS NombreApellido,
@@ -165,7 +175,9 @@ BEGIN
 	REPEAT('0', 9)::VARCHAR AS ContribucionTareaDiferencial,
 	REPEAT('0', 3)::VARCHAR AS HorasTrabajadas,
 	'T'::VARCHAR AS SeguroColectivoDeVidaObligatorio,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeDetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeDetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20), 0.00)::VARCHAR, '.', ','), 12) AS IncrementoSalarial,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible11
 	FROM Legajo l
 	INNER JOIN Liquidacion li ON li.legajoid = l.id
 	LEFT JOIN tmp_cantConyuge co ON co.legajoid = l.id
@@ -183,8 +195,9 @@ BEGIN
 	LEFT JOIN tmp_conceptoSueldoAnualComplementario tcsac ON tcsac.legajoid = l.id
 	LEFT JOIN tmp_conceptoVacaciones tcv ON tcv.legajoid = l.id
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
+	LEFT JOIN tmp_conceptoIncrementoSalarialDto14_20 tcisd ON tcisd.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20;
 
 	RETURN QUERY
 		SELECT (
@@ -245,7 +258,9 @@ BEGIN
 			tt_Final.ContribucionTareaDiferencial ||
 			tt_Final.HorasTrabajadas ||
 			tt_Final.SeguroColectivoDeVidaObligatorio ||
-			tt_Final.ImporteDetraccion) AS data
+			tt_Final.ImporteDetraccion ||
+			tt_Final.IncrementoSalarial ||
+			tt_Final.RemuneracionImponible11) AS data
 		FROM tt_FINAL;
 	
 
