@@ -17,12 +17,9 @@ BEGIN
 	RETURN QUERY 	
 
 	 WITH tmp_importeliquidacion AS (
-		SELECT li.id as liquidacionid, sum(ir.importeunitario) + sum(inr.importeunitario) - sum(r.importeunitario) -sum(d.importeunitario) as importeLiquidacion
+		SELECT li.id as liquidacionid, 0::numeric as importeLiquidacion
 		FROM Liquidacion li
-		LEFT JOIN Retencion r ON r.liquidacionid = li.id
-		LEFT JOIN Descuento d ON d.liquidacionid = li.id
-		LEFT JOIN ImporteRemunerativo ir ON ir.liquidacionid = li.id
-		LEFT JOIN ImporteNoRemunerativo inr ON inr.liquidacionid = li.id
+		LEFT JOIN Liquidacionitem liqitem ON li.id = liqitem.liquidacionid
 		WHERE li.fecha BETWEEN fechadesde AND fechahasta
 		GROUP BY li.id
 	)
