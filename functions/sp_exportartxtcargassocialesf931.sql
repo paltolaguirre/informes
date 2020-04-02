@@ -176,7 +176,7 @@ BEGIN
 	REPEAT('0', 3)::VARCHAR AS HorasTrabajadas,
 	'T'::VARCHAR AS SeguroColectivoDeVidaObligatorio,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeDetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20), 0.00)::VARCHAR, '.', ','), 12) AS IncrementoSalarial,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20,2), 0.00)::VARCHAR, '.', ','), 12) AS IncrementoSalarial,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible11
 	FROM Legajo l
 	INNER JOIN Liquidacion li ON li.legajoid = l.id
