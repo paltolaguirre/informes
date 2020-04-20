@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/xubiosueldos/informes/cargassocialesf931"
 	"github.com/xubiosueldos/informes/librosueldos"
+	"github.com/xubiosueldos/informes/liquidacionfinalanual"
 )
 
 type Route struct {
@@ -67,5 +68,11 @@ var routes = Routes{
 		"GET",
 		"/api/informe/informes/libro-sueldos/impresion-liquidaciones",
 		librosueldos.ImpresionLiquidaciones,
+	},
+	Route{
+		"LiquidacionFinalAnualF1357",
+		"GET",
+		"/api/informe/informes/liquidacion-final-anual-f1357",
+		liquidacionfinalanual.LiquidacionFinalAnualF1357,
 	},
 }
