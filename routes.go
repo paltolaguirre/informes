@@ -1,7 +1,13 @@
 package main
 
-import "github.com/gorilla/mux"
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/xubiosueldos/informes/cargassocialesf931"
+	"github.com/xubiosueldos/informes/librosueldos"
+	"github.com/xubiosueldos/informes/liquidacionfinalanual"
+)
 
 type Route struct {
 	Name       string
@@ -37,30 +43,36 @@ var routes = Routes{
 		"InformeF931",
 		"GET",
 		"/api/informe/informes/cargas-sociales-f931",
-		InformeF931,
+		cargassocialesf931.InformeF931,
 	},
 	Route{
 		"LibroSueldos",
 		"GET",
 		"/api/informe/informes/libro-sueldos",
-		LibroSueldos,
+		librosueldos.LibroSueldos,
 	},
 	Route{
 		"InformeF931ExportarTxt",
 		"GET",
 		"/api/informe/informes/cargas-sociales-f931-exportartxt",
-		InformeF931ExportarTxt,
+		cargassocialesf931.InformeF931ExportarTxt,
 	},
 	Route{
 		"ImpresionEncabezado",
 		"GET",
 		"/api/informe/informes/libro-sueldos/impresion-encabezado",
-		ImpresionEncabezado,
+		librosueldos.ImpresionEncabezado,
 	},
 	Route{
 		"ImpresionLiquidaciones",
 		"GET",
 		"/api/informe/informes/libro-sueldos/impresion-liquidaciones",
-		ImpresionLiquidaciones,
+		librosueldos.ImpresionLiquidaciones,
+	},
+	Route{
+		"LiquidacionFinalAnualF1357",
+		"GET",
+		"/api/informe/informes/liquidacion-final-anual-f1357",
+		liquidacionfinalanual.LiquidacionFinalAnualF1357,
 	},
 }
