@@ -34,7 +34,7 @@ func LiquidacionFinalAnualF1357(w http.ResponseWriter, r *http.Request) {
 		p_anio := queries["anio"][0]
 		p_mes := queries["mes"][0]
 
-		if p_tipopresentacion == "FINAL" {
+		if p_tipopresentacion == "Final" {
 			esfinal = true
 		}
 
