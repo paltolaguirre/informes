@@ -2,11 +2,13 @@ CREATE OR REPLACE FUNCTION public.sp_liquidacionfinalanualf1357(esfinal boolean,
  RETURNS TABLE(legajo text, totalremuneraciones numeric, totaldeduccionesgenerales numeric, totaldeduccionespersonales numeric, totalimpuestodeterminado numeric)
  LANGUAGE plpgsql
 AS $function$
-BEGIN
+
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
 	mes CONSTANT VARCHAR := RIGHT(C_ZEROS || p_mes,2);
+BEGIN
+
 RETURN QUERY
 	
 with tablaLegajosIDs as(
