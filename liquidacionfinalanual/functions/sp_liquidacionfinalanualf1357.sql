@@ -60,6 +60,7 @@ INNER JOIN tmp_totalDeduccionesGenerales ttdg ON ttdg.liquidacionid = l.id
 INNER JOIN tmp_totalDeduccionesPersonales ttdp ON ttdp.liquidacionid = l.id
 INNER JOIN tmp_totalImpuestoDeterminado ttid ON ttid.liquidacionid = l.id
 WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes))
-GROUP BY l.legajoid,le.cuil,le.nombre,le.apellido,ttr.totalremuneraciones,ttdg.totaldeduccionesgenerales, ttdp.totaldeduccionespersonales,ttid.totalimpuestodeterminado;
+GROUP BY l.legajoid,le.cuil,le.nombre,le.apellido,ttr.totalremuneraciones,ttdg.totaldeduccionesgenerales, ttdp.totaldeduccionespersonales,ttid.totalimpuestodeterminado
+ORDER BY l.legajoid;
 END; 
 $function$;
