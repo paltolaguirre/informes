@@ -6,17 +6,18 @@ DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
 	C_ESPACIOS CONSTANT VARCHAR := '                                                                        ';
-
+	C_SAC CONSTANT INT := -5;
 BEGIN
 DROP TABLE IF EXISTS tt_FINAL;
 
 CREATE TEMP TABLE tt_FINAL AS
-
+-- Solo obtengo los legajos que usan IG
 WITH tablaLegajosIDs AS(
 	SELECT legajoid
 	FROM liquidacion l
 	INNER JOIN liquidaciontipo lt ON l.tipoid = lt.id
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND lt.id = -6 AND to_char(l.fechaperiodoliquidacion,'MM') = mes) OR (not esfinal AND lt.id != -6  AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes))
+	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND li.conceptoid = -29 AND ((esfinal AND lt.id = -6 AND to_char(l.fechaperiodoliquidacion,'MM') = mes) OR (not esfinal AND lt.id != -6  AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes))
 	GROUP BY legajoid
 ),
 tmp_FechaDesdeHasta AS(
@@ -653,7 +654,7 @@ LEFT JOIN tmp_ImpuestoDeterminado tid ON l.id = tid.liquidacionid
 LEFT JOIN tmp_ImpuestoRetenido tir ON l.id = tir.liquidacionid
 LEFT JOIN tmp_PagosACuenta tpc ON l.id = tpc.liquidacionid
 LEFT JOIN tmp_SaldoAPagar tsp ON l.id = tsp.liquidacionid
-WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes))
+WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND l.tipoid != C_SAC AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes))
 GROUP BY tl.legajoid,le.cuil,tfdh.fechadesde,tfdh.FechaHasta,tls.beneficioLegajo,trb.importe,trnh.importe,tspc.importe,tssc.importe,theg.importe,tmvg.importe,tpdg.importe,trnae.importe,thee.importe,tmve.importe,tpde.importe,trboe.importe,trnhoe.importe,tspcoe.importe,tsscoe.importe,thegoe.importe,tmvgoe.importe,tpdgoe.importe,trnaeoe.importe,theeoe.importe,tmveoe.importe,tpdeoe.importe,tsrg.importe,tsrngnae.importe,ttr.importe,taj.importe,tajoe.importe,taos.importe,taosoe.importe,tcs.importe,tcsoe.importe,tcma.importe,tpscm.importe,tpsam.importe,tapsrp.importe,tacf.importe,tgs.importe,tgrc.importe,tdfnpm.importe,tdolnpm.importe,thss.importe,tich.importe,tacsfr.importe,tacc.importe,tai.importe,tesd.importe,tgmv.importe,tieo.importe,tod.importe,
 tsdg.importe,tmni.importe,tde.importe,tc.importe,tch.importe,th.importe,tscf.importe,trsi.importe,taa90lg.importe,taashe.importe,tid.importe,tir.importe,tpc.importe,tsp.importe
 ORDER BY tl.legajoid;
