@@ -75,4 +75,10 @@ var routes = Routes{
 		"/api/informe/informes/liquidacion-final-anual-f1357",
 		liquidacionfinalanual.LiquidacionFinalAnualF1357,
 	},
+	Route{
+		"LiquidacionFinalAnualF1357ExportarTxt",
+		"GET",
+		"/api/informe/informes/liquidacion-final-anual-f1357-exportartxt",
+		liquidacionfinalanual.LiquidacionFinalAnualF1357ExportarTxt,
+	},
 }
