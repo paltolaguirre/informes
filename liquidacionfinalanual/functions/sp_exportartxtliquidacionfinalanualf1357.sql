@@ -6,21 +6,23 @@ DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
 	C_ESPACIOS CONSTANT VARCHAR := '                                                                        ';
+	C_SAC CONSTANT INT := -5;
 
 BEGIN
 DROP TABLE IF EXISTS tt_FINAL;
 
 CREATE TEMP TABLE tt_FINAL AS
-
+-- Solo obtengo los legajos que usan IG
 WITH tablaLegajosIDs AS(
 	SELECT legajoid
 	FROM liquidacion l
 	INNER JOIN liquidaciontipo lt ON l.tipoid = lt.id
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND lt.id = -6 AND to_char(l.fechaperiodoliquidacion,'MM') = mes) OR (not esfinal AND lt.id != -6  AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes))
+	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND li.conceptoid = -29 AND ((esfinal AND lt.id = -6 AND to_char(l.fechaperiodoliquidacion,'MM') = mes) OR (not esfinal AND lt.id != -6  AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes))
 	GROUP BY legajoid
 ),
 tmp_FechaDesdeHasta AS(
-    SELECT le.legajoid AS Legajoid, min(l.fechaperiodoliquidacion) AS FechaDesde, max(l.fechaperiodoliquidacion) AS FechaHasta
+    SELECT le.legajoid AS Legajoid, min(l.fechaperiodoliquidacion) AS FechaDesde, (date_trunc('MONTH',max(l.fechaperiodoliquidacion)) + INTERVAL '1 MONTH - 1 day') AS FechaHasta
 	FROM liquidacion l
     INNER JOIN tablaLegajosIDs le ON l.legajoid = le.legajoid
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio 
@@ -36,96 +38,109 @@ tmp_LegajoSiradig AS(
     GROUP BY le.legajoid
 ),
 tmp_RemuneracionBruta AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_BRUTA'
-	
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <=  mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_BRUTA'
+	GROUP BY tl.legajoid
 ),
 tmp_RetribucionNoHabitual AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'RETRIBUCIONES_NO_HABITUALES'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <=  mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'RETRIBUCIONES_NO_HABITUALES'
+	GROUP BY tl.legajoid
 ),
 tmp_SacPrimerCuota AS (
-	SELECT le.legajoid as legajoid, li.importeunitario AS importe 
+	SELECT le.legajoid AS legajoid, li.importeunitario AS importe 
 	FROM liquidacion l
-	INNER JOIN tablaLegajosIDs le on l.legajoid = le.legajoid
+	INNER JOIN tablaLegajosIDs le ON l.legajoid = le.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND to_char(l.fechaperiodoliquidacion, 'MM') = '06' AND li.conceptoid = -2 and l.tipoid = -5
 ),
 tmp_SacSegundaCuota AS (
-	SELECT le.legajoid as legajoid, li.importeunitario AS importe 
+	SELECT le.legajoid AS legajoid, li.importeunitario AS importe 
 	FROM liquidacion l
-	INNER JOIN tablaLegajosIDs le on l.legajoid = le.legajoid
+	INNER JOIN tablaLegajosIDs le ON l.legajoid = le.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND to_char(l.fechaperiodoliquidacion, 'MM') = '12' AND li.conceptoid = -2 and l.tipoid = -5
 ),
 tmp_HorasExtrasGravadas AS (
-SELECT l.id as liquidacionid, a.importe AS importe 
+SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'HORAS_EXTRAS_GRAVADAS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'HORAS_EXTRAS_GRAVADAS'
+	GROUP BY tl.legajoid
 ),
 tmp_MovilidadYViaticosGravada AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MOVILIDAD_Y_VIATICOS_GRAVADA'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'MOVILIDAD_Y_VIATICOS_GRAVADA'
+	GROUP BY tl.legajoid
 ),
 tmp_PersonalDocenteGravada AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MATERIAL_DIDACTICO_PERSONAL_DOCENTE_REMUNERACION_GRAVADA'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'MATERIAL_DIDACTICO_PERSONAL_DOCENTE_REMUNERACION_GRAVADA'
+	GROUP BY tl.legajoid
 ),
 tmp_RemuneracionNoAlcanzadaOExenta AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT l.id AS liquidacionid, a.importe AS importe 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_NO_ALCANZADA_O_EXENTA'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_NO_ALCANZADA_O_EXENTA'
 ),
 tmp_HorasExtrasExentas AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT l.id AS liquidacionid, a.importe AS importe 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'HORAS_EXTRAS_REMUNERACION_EXENTA'
 ),
 tmp_MovilidadYViaticosExenta AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT l.id AS liquidacionid, a.importe AS importe 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MOVILIDAD_Y_VIATICOS_REMUNERACION_EXENTA'
 ),
 tmp_PersonalDocenteExenta AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT l.id AS liquidacionid, a.importe AS importe 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MATERIAL_DIDACTICO_PERSONAL_DOCENTE_REMUNERACION_EXENTA'
 ),
 tmp_RemuneracionBrutaOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_BRUTA_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'REMUNERACION_BRUTA_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_RetribucionNoHabitualOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid as legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'RETRIBUCIONES_NO_HABITUALES_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'RETRIBUCIONES_NO_HABITUALES_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_SacPrimerCuotaOtrosEmpleos AS (
 	SELECT le.legajoid AS legajoid, igoe.sac AS importe
@@ -144,25 +159,31 @@ tmp_SacSegundaCuotaOtrosEmpleos AS (
     GROUP BY le.legajoid,igoe.sac
 ),
 tmp_HorasExtrasGravadasOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'HORAS_EXTRAS_GRAVADAS_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'HORAS_EXTRAS_GRAVADAS_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_MovilidadYViaticosGravadaOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MOVILIDAD_Y_VIATICOS_GRAVADA_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'MOVILIDAD_Y_VIATICOS_GRAVADA_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_PersonalDocenteGravadaOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'MATERIA_DIDACTICO_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'MATERIA_DIDACTICO_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_RemuneracionNoAlcanzadaOExentaOtrosEmpleos AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -214,53 +235,67 @@ tmp_TotalRemuneraciones AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'TOTAL_REMUNERACIONES'
 ),
 tmp_AportesJubilatorios AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_JUBILATORIOS_RETIROS_PENSIONES_O_SUBSIDIOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_JUBILATORIOS_RETIROS_PENSIONES_O_SUBSIDIOS'
+	GROUP BY tl.legajoid
 ),
 tmp_AportesJubilatoriosOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
 	FROM liquidacion l 
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_JUBILATORIOS_RETIROS_PENSIONES_O_SUBSIDIOS_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_JUBILATORIOS_RETIROS_PENSIONES_O_SUBSIDIOS_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_AportesObraSocial AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_OBRA_SOCIAL'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_OBRA_SOCIAL'
+	GROUP BY tl.legajoid
 ),
 tmp_AportesObraSocialOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_OBRA_SOCIAL_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_OBRA_SOCIAL_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_CuotaSindical AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_SINDICAL'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_SINDICAL'
+	GROUP BY tl.legajoid
 ),
 tmp_CuotaSindicalOtrosEmpleos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_SINDICAL_OTROS_EMPLEOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_SINDICAL_OTROS_EMPLEOS'
+	GROUP BY tl.legajoid
 ),
 tmp_CuotaMedicaAsistencial AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_MEDICA_ASISTENCIAL'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'CUOTA_MEDICO_ASISTENCIAL'
+	GROUP BY tl.legajoid
 ),
 tmp_PrimasSeguroCasoMuerte AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -291,32 +326,40 @@ tmp_AdquisicionCuotapartesFCI AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'ADQUISICION_DE_CUOTAPARTES_DE_FCI_CON_FINES_DE_RETIRO'
 ),
 tmp_GastosSepelio AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'GASTOS_DE_SEPELIO'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'GASTOS_DE_SEPELIO'
+	GROUP BY tl.legajoid
 ),
 tmp_GastosRepresentacionCorredores AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'GASTOS_DE_REPRESENTACION_E_INTERESES_DE_CORREDORES_Y_VIAJANTES_DE_COMERCIO'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'GASTOS_DE_REPRESENTACION_E_INTERESES_DE_CORREDORES_Y_VIAJANTES_DE_COMERCIO'
+	GROUP BY tl.legajoid
 ),
 tmp_DonacionFisicosNacProvMunArt20 AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'DONACION_FISICOS_NAC_PROV_MUN_ART_20'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'DONACION_FISICOS_NAC_PROV_MUN_ART_20'
+	GROUP BY tl.legajoid
 ),
 tmp_DescuentosObligatoriosLeyNacionalProvincialMunicipal AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'DESCUENTOS_OBLIGATORIOS_POR_LEY_NACIONAL_PROVINCIAL_MUNICIPAL'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'DESCUENTOS_OBLIGATORIOS_POR_LEY_NACIONAL_PROVINCIAL_MUNICIPAL'
+	GROUP BY tl.legajoid
 ),
 tmp_HonorariosServSanitaria AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -326,18 +369,22 @@ tmp_HonorariosServSanitaria AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'HONORARIOS_SERV_ASISTENCIA_SANITARIA_MEDICA_Y_PARAMEDICA'
 ),
 tmp_InteresesCreditosHipotecarios AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'INTERESES_CREDITOS_HIPOTECARIOS'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'INTERESES_CREDITOS_HIPOTECARIOS'
+	GROUP BY tl.legajoid
 ),
 tmp_AportesCapSocFondoRiesgoSGR AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_CAP_SOC_FONDO_RIESGO_SOCIOS_PROTECTORES_SGR'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_CAP_SOC_FONDO_RIESGO_SOCIOS_PROTECTORES_SGR'
+	GROUP BY tl.legajoid
 ),
 tmp_AportesCajasComplementarias AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -347,18 +394,22 @@ tmp_AportesCajasComplementarias AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'APORTES_CAJAS_COMPLEMENTARIAS_FONDOS_COMPENSADORES_DE_PREV_SIMILARES'
 ),
 tmp_AlquilerInmbuebles AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'ALQUILER_INMUEBLES_DESTINADOS_A_CASA_HABITACION'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'ALQUILER_INMUEBLES_DESTINADOS_A_CASA_HABITACION'
+	GROUP BY tl.legajoid
 ),
 tmp_EmpleadosServicioDomestico AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'EMPLEADOS_SERVICIO_DOMESTICO'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'EMPLEADOS_SERVICIO_DOMESTICO'
+	GROUP BY tl.legajoid
 ),
 tmp_GastosMovilidadViaticos AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -368,18 +419,22 @@ tmp_GastosMovilidadViaticos AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'GASTOS_MOVILIDAD_VIATICOS_ABONADOS_POR_EL_EMPLEADOR'
 ),
 tmp_IndumentariaEquipamientoObligatorio AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'INDUMENTARIA_EQUIPAMIENTO_CARACTER_OBLIGATORIO'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'INDUMENTARIA_EQUIPAMIENTO_CARACTER_OBLIGATORIO'
+	GROUP BY tl.legajoid
 ),
 tmp_OtrasDeducciones AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
+	SELECT tl.legajoid AS legajoid, sum(a.importe) AS importe 
+	FROM liquidacion l
+	INNER JOIN tablaLegajosIDs tl ON l.legajoid = tl.legajoid 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'OTRAS_DEDUCCIONES'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT) OR (not esfinal AND to_number(to_char(l.fechaperiodoliquidacion, 'MM'),'99') <= mes::INT)) AND li.conceptoid = -29 AND a.codigo = 'OTRAS_DEDUCCIONES'
+	GROUP BY tl.legajoid
 ),
 tmp_SubtotalDeduccionesGenerales AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -410,11 +465,10 @@ tmp_Conyuge AS (
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'CONYUGE_ANUAL'
 ),
 tmp_CantidadHijos AS (
-	SELECT l.id as liquidacionid, a.importe AS importe 
-	FROM liquidacion l 
-	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
-	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'CANTIDAD_HIJOS_HIJASTROS'
+	SELECT tl.legajoid AS legajoid, count(h.id) AS cantHijos
+	FROM tablaLegajosIDs tl 
+	INNER JOIN hijo h ON tl.legajoid = h.legajoid
+	GROUP BY tl.legajoid
 ),
 tmp_Hijos AS (
 	SELECT l.id as liquidacionid, a.importe AS importe 
@@ -479,6 +533,8 @@ tmp_SaldoAPagar AS (
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
 	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'SALDO_A_PAGAR'
 )
+
+
 SELECT
 '02'::VARCHAR AS TipoRegistroTrabajador,
 RIGHT(C_ZEROS || coalesce(le.cuil,''), 11)::VARCHAR AS CuitTrabajador, 
@@ -547,7 +603,7 @@ RIGHT(C_ZEROS || REPLACE(coalesce(round(tmni.importe,2), 0.00)::VARCHAR, '.', ''
 RIGHT(C_ZEROS || REPLACE(coalesce(round(tde.importe,2), 0.00)::VARCHAR, '.', ''), 15)::VARCHAR AS DeduccionEspecial,
 RIGHT(C_ZEROS || REPLACE(coalesce(0, 0.00)::VARCHAR, '.', ''), 15)::VARCHAR AS DeduccionEspecifica,
 RIGHT(C_ZEROS || REPLACE(coalesce(round(tc.importe,2), 0.00)::VARCHAR, '.', ''), 15)::VARCHAR AS Conyuge,
-RIGHT(C_ZEROS || coalesce(tch.importe::int,0), 2)::VARCHAR AS CantidadHijos,
+RIGHT(C_ZEROS || coalesce(tch.cantHijos::int,0), 2)::VARCHAR AS CantidadHijos,
 RIGHT(C_ZEROS || REPLACE(coalesce(round(th.importe,2), 0.00)::VARCHAR, '.', ''), 15)::VARCHAR AS Hijos,
 RIGHT(C_ZEROS || REPLACE(coalesce(round(tscf.importe,2), 0.00)::VARCHAR, '.', ''), 15)::VARCHAR AS TotalCargasFamilia,
 --“Total Deducciones ART. 23” es la sumatoria del campo 3 (“Ganancia no Imponible”) + campo 4 (“Deducción Especial”) + campo 9 (“Total de Cargas de Familia”)
@@ -590,24 +646,24 @@ INNER JOIN tablaLegajosIDs tl on le.id = tl.legajoid
 INNER JOIN liquidacion l ON l.legajoid = tl.legajoid
 LEFT JOIN tmp_FechaDesdeHasta tfdh ON tl.legajoid = tfdh.legajoid
 LEFT JOIN tmp_LegajoSiradig tls ON tl.legajoid = tls.legajoid
-LEFT JOIN tmp_RemuneracionBruta trb ON l.id = trb.liquidacionid
-LEFT JOIN tmp_RetribucionNoHabitual trnh ON l.id = trnh.liquidacionid
+LEFT JOIN tmp_RemuneracionBruta trb ON tl.legajoid = trb.legajoid
+LEFT JOIN tmp_RetribucionNoHabitual trnh ON tl.legajoid = trnh.legajoid
 LEFT JOIN tmp_SacPrimerCuota tspc ON tl.legajoid = tspc.legajoid
 LEFT JOIN tmp_SacSegundaCuota tssc ON tl.legajoid = tssc.legajoid
-LEFT JOIN tmp_HorasExtrasGravadas theg ON l.id = theg.liquidacionid
-LEFT JOIN tmp_MovilidadYViaticosGravada tmvg ON l.id = tmvg.liquidacionid
-LEFT JOIN tmp_PersonalDocenteGravada tpdg ON l.id = tpdg.liquidacionid
+LEFT JOIN tmp_HorasExtrasGravadas theg ON tl.legajoid = theg.legajoid
+LEFT JOIN tmp_MovilidadYViaticosGravada tmvg ON tl.legajoid = tmvg.legajoid
+LEFT JOIN tmp_PersonalDocenteGravada tpdg ON tl.legajoid = tpdg.legajoid
 LEFT JOIN tmp_RemuneracionNoAlcanzadaOExenta trnae ON l.id = trnae.liquidacionid
 LEFT JOIN tmp_HorasExtrasExentas thee ON l.id = thee.liquidacionid
 LEFT JOIN tmp_MovilidadYViaticosExenta tmve ON l.id = tmve.liquidacionid
 LEFT JOIN tmp_PersonalDocenteExenta tpde ON l.id = tpde.liquidacionid
-LEFT JOIN tmp_RemuneracionBrutaOtrosEmpleos trboe ON l.id = trboe.liquidacionid
-LEFT JOIN tmp_RetribucionNoHabitualOtrosEmpleos trnhoe ON l.id = trnhoe.liquidacionid
+LEFT JOIN tmp_RemuneracionBrutaOtrosEmpleos trboe ON tl.legajoid = trboe.legajoid
+LEFT JOIN tmp_RetribucionNoHabitualOtrosEmpleos trnhoe ON tl.legajoid = trnhoe.legajoid
 LEFT JOIN tmp_SacPrimerCuotaOtrosEmpleos tspcoe ON tl.legajoid = tspcoe.legajoid
 LEFT JOIN tmp_SacSegundaCuotaOtrosEmpleos tsscoe ON tl.legajoid = tsscoe.legajoid
-LEFT JOIN tmp_HorasExtrasGravadasOtrosEmpleos thegoe ON l.id = thegoe.liquidacionid
-LEFT JOIN tmp_MovilidadYViaticosGravadaOtrosEmpleos tmvgoe ON l.id = tmvgoe.liquidacionid
-LEFT JOIN tmp_PersonalDocenteGravadaOtrosEmpleos tpdgoe ON l.id = tpdgoe.liquidacionid
+LEFT JOIN tmp_HorasExtrasGravadasOtrosEmpleos thegoe ON tl.legajoid = thegoe.legajoid
+LEFT JOIN tmp_MovilidadYViaticosGravadaOtrosEmpleos tmvgoe ON tl.legajoid = tmvgoe.legajoid
+LEFT JOIN tmp_PersonalDocenteGravadaOtrosEmpleos tpdgoe ON tl.legajoid = tpdgoe.legajoid
 LEFT JOIN tmp_RemuneracionNoAlcanzadaOExentaOtrosEmpleos trnaeoe ON l.id = trnaeoe.liquidacionid
 LEFT JOIN tmp_HorasExtrasExentasOtrosEmpleos theeoe ON l.id = theeoe.liquidacionid
 LEFT JOIN tmp_MovilidadYViaticosExentaOtrosEmpleos tmveoe ON l.id = tmveoe.liquidacionid
@@ -615,35 +671,35 @@ LEFT JOIN tmp_PersonalDocenteExentaOtrosEmpleos tpdeoe ON l.id = tpdeoe.liquidac
 LEFT JOIN tmp_SubtotalRemuneracionGravada tsrg ON l.id = tsrg.liquidacionid
 LEFT JOIN tmp_SubtotalRemuneracionNoGravadaNoAlcanzadaExenta tsrngnae ON l.id = tsrngnae.liquidacionid
 LEFT JOIN tmp_TotalRemuneraciones ttr ON l.id = ttr.liquidacionid
-LEFT JOIN tmp_AportesJubilatorios taj ON l.id = taj.liquidacionid
-LEFT JOIN tmp_AportesJubilatoriosOtrosEmpleos tajoe ON l.id = tajoe.liquidacionid
-LEFT JOIN tmp_AportesObraSocial taos ON l.id = taos.liquidacionid
-LEFT JOIN tmp_AportesObraSocialOtrosEmpleos taosoe ON l.id = taosoe.liquidacionid
-LEFT JOIN tmp_CuotaSindical tcs ON l.id = tcs.liquidacionid
-LEFT JOIN tmp_CuotaSindicalOtrosEmpleos tcsoe ON l.id = tcsoe.liquidacionid
-LEFT JOIN tmp_CuotaMedicaAsistencial tcma ON l.id = tcma.liquidacionid
+LEFT JOIN tmp_AportesJubilatorios taj ON tl.legajoid = taj.legajoid
+LEFT JOIN tmp_AportesJubilatoriosOtrosEmpleos tajoe ON tl.legajoid = tajoe.legajoid
+LEFT JOIN tmp_AportesObraSocial taos ON tl.legajoid = taos.legajoid
+LEFT JOIN tmp_AportesObraSocialOtrosEmpleos taosoe ON tl.legajoid = taosoe.legajoid
+LEFT JOIN tmp_CuotaSindical tcs ON tl.legajoid = tcs.legajoid
+LEFT JOIN tmp_CuotaSindicalOtrosEmpleos tcsoe ON tl.legajoid = tcsoe.legajoid
+LEFT JOIN tmp_CuotaMedicaAsistencial tcma ON tl.legajoid = tcma.legajoid
 LEFT JOIN tmp_PrimasSeguroCasoMuerte tpscm ON l.id = tpscm.liquidacionid
 LEFT JOIN tmp_PrimasSeguroAhorroOMixto tpsam ON l.id = tpsam.liquidacionid
 LEFT JOIN tmp_AportesPlanesSeguroRetiroPrivado tapsrp ON l.id = tapsrp.liquidacionid
 LEFT JOIN tmp_AdquisicionCuotapartesFCI tacf ON l.id = tacf.liquidacionid
-LEFT JOIN tmp_GastosSepelio tgs ON l.id = tgs.liquidacionid
-LEFT JOIN tmp_GastosRepresentacionCorredores tgrc ON l.id = tgrc.liquidacionid
-LEFT JOIN tmp_DonacionFisicosNacProvMunArt20 tdfnpm ON l.id = tdfnpm.liquidacionid
-LEFT JOIN tmp_DescuentosObligatoriosLeyNacionalProvincialMunicipal tdolnpm ON l.id = tdolnpm.liquidacionid
+LEFT JOIN tmp_GastosSepelio tgs ON tl.legajoid = tgs.legajoid
+LEFT JOIN tmp_GastosRepresentacionCorredores tgrc ON tl.legajoid = tgrc.legajoid
+LEFT JOIN tmp_DonacionFisicosNacProvMunArt20 tdfnpm ON tl.legajoid = tdfnpm.legajoid
+LEFT JOIN tmp_DescuentosObligatoriosLeyNacionalProvincialMunicipal tdolnpm ON tl.legajoid = tdolnpm.legajoid
 LEFT JOIN tmp_HonorariosServSanitaria thss ON l.id = thss.liquidacionid
-LEFT JOIN tmp_InteresesCreditosHipotecarios tich ON l.id = tich.liquidacionid
-LEFT JOIN tmp_AportesCapSocFondoRiesgoSGR tacsfr ON l.id = tacsfr.liquidacionid
+LEFT JOIN tmp_InteresesCreditosHipotecarios tich ON tl.legajoid = tich.legajoid
+LEFT JOIN tmp_AportesCapSocFondoRiesgoSGR tacsfr ON tl.legajoid = tacsfr.legajoid
 LEFT JOIN tmp_AportesCajasComplementarias tacc ON l.id = tacc.liquidacionid
-LEFT JOIN tmp_AlquilerInmbuebles tai ON l.id = tai.liquidacionid
-LEFT JOIN tmp_EmpleadosServicioDomestico tesd ON l.id = tesd.liquidacionid
+LEFT JOIN tmp_AlquilerInmbuebles tai ON tl.legajoid = tai.legajoid
+LEFT JOIN tmp_EmpleadosServicioDomestico tesd ON tl.legajoid = tesd.legajoid
 LEFT JOIN tmp_GastosMovilidadViaticos tgmv ON l.id = tgmv.liquidacionid
-LEFT JOIN tmp_IndumentariaEquipamientoObligatorio tieo ON l.id = tieo.liquidacionid
-LEFT JOIN tmp_OtrasDeducciones tod ON l.id = tod.liquidacionid
+LEFT JOIN tmp_IndumentariaEquipamientoObligatorio tieo ON tl.legajoid = tieo.legajoid
+LEFT JOIN tmp_OtrasDeducciones tod ON tl.legajoid = tod.legajoid
 LEFT JOIN tmp_SubtotalDeduccionesGenerales tsdg ON l.id = tsdg.liquidacionid
 LEFT JOIN tmp_MinimoNoImponible tmni ON l.id = tmni.liquidacionid
 LEFT JOIN tmp_DeduccionEspecial tde ON l.id = tde.liquidacionid
 LEFT JOIN tmp_Conyuge tc ON l.id = tc.liquidacionid
-LEFT JOIN tmp_CantidadHijos tch ON l.id = tch.liquidacionid
+LEFT JOIN tmp_CantidadHijos tch ON tl.legajoid = tch.legajoid
 LEFT JOIN tmp_Hijos th ON l.id = th.liquidacionid
 LEFT JOIN tmp_SubtotalCargasFamilia tscf ON l.id = tscf.liquidacionid
 LEFT JOIN tmp_RemuneracionSujetaImpuesto trsi ON l.id = trsi.liquidacionid
@@ -653,9 +709,9 @@ LEFT JOIN tmp_ImpuestoDeterminado tid ON l.id = tid.liquidacionid
 LEFT JOIN tmp_ImpuestoRetenido tir ON l.id = tir.liquidacionid
 LEFT JOIN tmp_PagosACuenta tpc ON l.id = tpc.liquidacionid
 LEFT JOIN tmp_SaldoAPagar tsp ON l.id = tsp.liquidacionid
-WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes))
+WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND l.tipoid != C_SAC AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes))
 GROUP BY tl.legajoid,le.cuil,tfdh.fechadesde,tfdh.FechaHasta,tls.beneficioLegajo,trb.importe,trnh.importe,tspc.importe,tssc.importe,theg.importe,tmvg.importe,tpdg.importe,trnae.importe,thee.importe,tmve.importe,tpde.importe,trboe.importe,trnhoe.importe,tspcoe.importe,tsscoe.importe,thegoe.importe,tmvgoe.importe,tpdgoe.importe,trnaeoe.importe,theeoe.importe,tmveoe.importe,tpdeoe.importe,tsrg.importe,tsrngnae.importe,ttr.importe,taj.importe,tajoe.importe,taos.importe,taosoe.importe,tcs.importe,tcsoe.importe,tcma.importe,tpscm.importe,tpsam.importe,tapsrp.importe,tacf.importe,tgs.importe,tgrc.importe,tdfnpm.importe,tdolnpm.importe,thss.importe,tich.importe,tacsfr.importe,tacc.importe,tai.importe,tesd.importe,tgmv.importe,tieo.importe,tod.importe,
-tsdg.importe,tmni.importe,tde.importe,tc.importe,tch.importe,th.importe,tscf.importe,trsi.importe,taa90lg.importe,taashe.importe,tid.importe,tir.importe,tpc.importe,tsp.importe
+tsdg.importe,tmni.importe,tde.importe,tc.importe,tch.cantHijos,th.importe,tscf.importe,trsi.importe,taa90lg.importe,taashe.importe,tid.importe,tir.importe,tpc.importe,tsp.importe
 ORDER BY tl.legajoid;
 
 RETURN QUERY
