@@ -120,7 +120,7 @@ BEGIN
 
 	SELECT 	
 	RIGHT(C_ZEROS || coalesce(l.cuil,''), 11) AS Cuil,
-	LEFT(REPLACE(coalesce((upper(l.apellido || ' ' || l.nombre)),''), 'Ñ', 'N') || C_ESPACIOS, 30) AS NombreApellido,
+	LEFT(TRANSLATE(REPLACE(coalesce((upper(l.apellido || ' ' || l.nombre)),''), 'Ñ', 'N'), 'áéíóúÁÉÍÓÚäëïöüÄËÏÖÜ','aeiouAEIOUaeiouAEIOU') || C_ESPACIOS, 30) AS NombreApellido,
 	CASE WHEN coalesce(co.cantidadConyuge,0) = 0 THEN 'F' ELSE 'T' END AS CantidadConyuge,
 	RIGHT(C_ZEROS || coalesce(h.cantidadHijos,0), 2) AS CantidadHijos,
 	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS CodigoSituacion,
