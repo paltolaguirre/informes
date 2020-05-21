@@ -159,7 +159,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tche.importeHorasExtras,2), 0.00)::VARCHAR, '.', ','), 12) AS HorasExtras,
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 12) AS ZonaDesfavorable,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcv.importeVacaciones,2), 0.00)::VARCHAR, '.', ','), 12) AS Vacaciones,
-	RIGHT(C_ZEROS || '30' , 9) AS CantidadDiasTrabajados,
+	RIGHT(C_ZEROS || coalesce(li.cantidaddiastrabajados,0), 9) AS CantidadDiasTrabajados,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible5,
 	'0'::VARCHAR AS TrabajadorConvencionado,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible6,
