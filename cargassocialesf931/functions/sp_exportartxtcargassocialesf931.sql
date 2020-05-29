@@ -198,7 +198,7 @@ BEGIN
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	LEFT JOIN tmp_conceptoIncrementoSalarialDto14_20 tcisd ON tcisd.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20,li.cantidaddiastrabajados;
 
 	RETURN QUERY
 		SELECT (
