@@ -116,6 +116,14 @@ BEGIN
 		LEFT JOIN concepto c ON liqit.conceptoid = c.id
 		WHERE ((li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta) AND (c.nombre = 'Incremento Salarial Dto 14/20'))
 		GROUP BY l.id
+	),
+	tmp_situacionRevista AS (
+		SELECT li.id AS liquidacionid ,suno.codigo AS situacionrevistauno,sdos.codigo AS situacionrevistados,stres.codigo AS situacionrevistatres
+		FROM liquidacion li 
+		LEFT JOIN situacion suno ON li.situacionrevistaunoid = suno.id 
+		LEFT JOIN situacion sdos ON li.situacionrevistadosid = sdos.id 
+		LEFT JOIN situacion stres ON li.situacionrevistatresid = stres.id
+		GROUP BY li.id,suno.codigo,sdos.codigo,stres.codigo
 	)
 
 	SELECT 	
@@ -148,12 +156,12 @@ BEGIN
 	RIGHT(C_ZEROS || coalesce(tipodeempresa,''), 1) AS TipoEmpresa,
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 9) AS AporteAdicionalObraSocial,
 	'1'::VARCHAR AS Regimen,
-	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS SituacionRevista1,
-	'01'::VARCHAR AS DiaInicioSituacionRevista1,
-	REPEAT('0', 2)::VARCHAR AS SituacionRevista2,
-	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista2,
-	REPEAT('0', 2)::VARCHAR AS SituacionRevista3,
-	REPEAT('0', 2)::VARCHAR AS DiaInicioSituacionRevista3,
+	RIGHT(C_ZEROS || coalesce(tsr.situacionrevistauno,''), 2) AS SituacionRevista1,
+	RIGHT(C_ZEROS || coalesce(to_char(li.fechasituacionrevistauno,'DD'),''), 2) AS DiaInicioSituacionRevista1,
+	RIGHT(C_ZEROS || coalesce(tsr.situacionrevistados,''), 2) AS SituacionRevista2,
+	RIGHT(C_ZEROS || coalesce(to_char(li.fechasituacionrevistados,'DD'),''), 2) AS DiaInicioSituacionRevista2,
+	RIGHT(C_ZEROS || coalesce(tsr.situacionrevistatres,''), 2) AS SituacionRevista3,
+	RIGHT(C_ZEROS || coalesce(to_char(li.fechasituacionrevistatres,'DD'),''), 2) AS DiaInicioSituacionRevista3,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(tcisd.importeIncrementoSalarialDto14_20,0.00) - coalesce(tcsac.importeSueldoAnualComplementario,0.00) - coalesce(tche.importeHorasExtras,0.00) - coalesce(id.importeDescuento,0.00) - coalesce(tcv.importeVacaciones,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS SueldoMasAdicionales,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcsac.importeSueldoAnualComplementario,2), 0.00)::VARCHAR, '.', ','), 12) AS Sac,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tche.importeHorasExtras,2), 0.00)::VARCHAR, '.', ','), 12) AS HorasExtras,
@@ -186,6 +194,7 @@ BEGIN
 	LEFT JOIN Condicion cond ON l.condicionid = cond.id
 	LEFT JOIN CondicionSiniestrado cs ON l.condicionsiniestradoid = cs.id
 	LEFT JOIN Situacion s ON l.situacionid = s.id
+	LEFT JOIN tmp_situacionRevista tsr ON li.id = tsr.liquidacionid
 	LEFT JOIN ModalidadContratacion mc ON l.modalidadcontratacionid = mc.id
 	LEFT JOIN ObraSocial os ON l.obrasocialid = os.id
 	LEFT JOIN tmp_cantidadadherentes tca  ON tca.legajoid = l.id
@@ -198,7 +207,7 @@ BEGIN
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	LEFT JOIN tmp_conceptoIncrementoSalarialDto14_20 tcisd ON tcisd.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20,li.cantidaddiastrabajados;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20,li.cantidaddiastrabajados,tsr.liquidacionid,tsr.situacionrevistauno,tsr.situacionrevistados,tsr.situacionrevistatres,li.fechasituacionrevistauno,li.fechasituacionrevistados,li.fechasituacionrevistatres;
 
 	RETURN QUERY
 		SELECT (
