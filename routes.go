@@ -7,6 +7,7 @@ import (
 	"github.com/xubiosueldos/informes/cargassocialesf931"
 	"github.com/xubiosueldos/informes/librosueldos"
 	"github.com/xubiosueldos/informes/liquidacionfinalanual"
+	"github.com/xubiosueldos/informes/librosueldosdigital"
 )
 
 type Route struct {
@@ -80,5 +81,11 @@ var routes = Routes{
 		"GET",
 		"/api/informe/informes/liquidacion-final-anual-f1357-exportartxt",
 		liquidacionfinalanual.LiquidacionFinalAnualF1357ExportarTxt,
+	},
+	Route{
+		"LibroSueldosDigital",
+		"GET",
+		"/api/informe/informes/libro-sueldos-digital",
+		librosueldosdigital.LibroSueldosDigital,
 	},
 }
