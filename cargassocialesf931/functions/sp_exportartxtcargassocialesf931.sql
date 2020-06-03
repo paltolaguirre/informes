@@ -169,7 +169,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcv.importeVacaciones,2), 0.00)::VARCHAR, '.', ','), 12) AS Vacaciones,
 	RIGHT(C_ZEROS || coalesce(li.cantidaddiastrabajados,0), 9) AS CantidadDiasTrabajados,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible5,
-	'0'::VARCHAR AS TrabajadorConvencionado,
+	CASE WHEN l.incluidoencct  THEN '1' ELSE '0' END AS TrabajadorConvencionado,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ',') , 12) AS RemuneracionImponible6,
 	REPEAT('0', 1)::VARCHAR AS TipoOperacion,
 	REPEAT('0', 12)::VARCHAR AS Adicionales,
@@ -183,7 +183,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) + coalesce(inr.importeNoRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible9,
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 9) AS ContribucionTareaDiferencial,
 	REPEAT('0', 3)::VARCHAR AS HorasTrabajadas,
-	'T'::VARCHAR AS SeguroColectivoDeVidaObligatorio,
+	CASE WHEN l.correspondescvo THEN 'T' ELSE 'F' END AS SeguroColectivoDeVidaObligatorio,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(importeDetraccion,2), 0.00)::VARCHAR, '.', ','), 12) AS ImporteDetraccion,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20,2), 0.00)::VARCHAR, '.', ','), 12) AS IncrementoSalarial,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(tcisd.importeIncrementoSalarialDto14_20,2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible11
