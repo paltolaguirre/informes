@@ -14,7 +14,7 @@ BEGIN
 	
 	SELECT
 	RIGHT(C_ZEROS || coalesce(ca.Codigo,''), 6)::VARCHAR AS CodigoConceptoAfip,
-    RIGHT(C_ZEROS || coalesce(c.Codigointerno,0), 10)::VARCHAR AS CodigoInterno,
+    RIGHT(C_ESPACIOS || coalesce(c.Codigointerno,0), 10)::VARCHAR AS CodigoInterno,
     RIGHT(C_ESPACIOS || coalesce(c.nombre,''), 150)::VARCHAR AS ConceptoNombre,
     CASE WHEN c.marcarepeticion  THEN '1' ELSE '0' END AS Marcarepeticion,
     CASE WHEN c.aportesipa  THEN '1' ELSE '0' END AS AporteSipa,
