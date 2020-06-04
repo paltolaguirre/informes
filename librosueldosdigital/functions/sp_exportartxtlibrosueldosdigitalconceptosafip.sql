@@ -51,12 +51,12 @@ BEGIN
             tt_FINAL.AportesFondoSolidario ||
             tt_FINAL.ContribucionesFondoSolidario ||
             tt_FINAL.AportesRenatea ||
-            tt_FINAL.ContribucionesRenatea ||
-            tt_FINAL.AsignacionesFamiliares ||
-            tt_FINAL.ContribucionesFondoNacional ||
+            tt_FINAL.ContribucionesRenatea || ' ' ||
+            tt_FINAL.AsignacionesFamiliares || ' ' ||
+            tt_FINAL.ContribucionesFondoNacional || ' '||
             tt_FINAL.ContribucionesLeyRiesgo ||
-            tt_FINAL.AportesRegimenesDiferenciales ||
-            tt_FINAL.AportesRegimenesEspeciales
+            tt_FINAL.AportesRegimenesDiferenciales || ' ' ||
+            tt_FINAL.AportesRegimenesEspeciales || ' '
 		) AS data
 		FROM tt_FINAL;
 	
