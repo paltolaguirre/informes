@@ -17,6 +17,10 @@ type Librosueldosdigital struct {
 	Fechaperiodoliquidacion time.Time `json:"fechaperiodoliquidacion"`
 }
 
+type Exportartxtconceptosafip struct {
+	Data string `json:"data"`
+}
+
 func LibroSueldosDigital(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("La URL accedida: " + r.URL.String())
@@ -37,5 +41,32 @@ func LibroSueldosDigital(w http.ResponseWriter, r *http.Request) {
 		db.Raw("SELECT * FROM SP_LIBROSUELDOSDIGITAL('" + p_tipoliquidacion + "','" + p_periodomensual + "')").Scan(&librossueldosdigitales)
 
 		framework.RespondJSON(w, http.StatusOK, librossueldosdigitales)
+	}
+}
+
+func LibroSueldosDigitalExportarTxtConceptosAFIP(w http.ResponseWriter, r *http.Request) {
+
+	var exportartxtconceptosafip []Exportartxtconceptosafip
+	var datosexportartxtconceptosafip Exportartxtconceptosafip
+	fmt.Println("La URL accedida: " + r.URL.String())
+
+	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
+	if tokenValido {
+
+		tenant := apiclientautenticacion.ObtenerTenant(tokenAutenticacion)
+		db := conexionBD.ObtenerDB(tenant)
+
+		defer conexionBD.CerrarDB(db)
+
+		db.Raw("SELECT * FROM SP_EXPORTARTXTLIBROSUELDOSDIGITALCONCEPTOSAFIP()").Scan(&exportartxtconceptosafip)
+
+		for i := 0; i < len(exportartxtconceptosafip); i++ {
+
+			datosexportartxtconceptosafip.Data = datosexportartxtconceptosafip.Data + exportartxtconceptosafip[i].Data + "\n"
+
+		}
+
+		framework.RespondJSON(w, http.StatusOK, datosexportartxtconceptosafip)
+
 	}
 }
