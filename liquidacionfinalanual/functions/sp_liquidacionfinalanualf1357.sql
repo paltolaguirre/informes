@@ -6,7 +6,7 @@ AS $function$
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';
-	mes CONSTANT VARCHAR := RIGHT(C_ZEROS || p_mes,2);
+	mes CONSTANT VARCHAR := RIGHT(C_ZEROS OR p_mes,2);
 BEGIN
 
 RETURN QUERY
@@ -23,31 +23,31 @@ tmp_totalRemuneraciones as (
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'TOTAL_REMUNERACIONES'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND (li.conceptoid = -29 OR li.conceptoid = -30) AND a.codigo = 'TOTAL_REMUNERACIONES'
 ),
 tmp_totalDeduccionesGenerales as (
 	SELECT l.id as liquidacionid, a.importe AS totaldeduccionesgenerales 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'SUBTOTAL_DEDUCCIONES_GENERALES'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND (li.conceptoid = -29 OR li.conceptoid = -30) AND a.codigo = 'SUBTOTAL_DEDUCCIONES_GENERALES'
 ),
 tmp_totalDeduccionesPersonales as (
 	SELECT l.id as liquidacionid, a.importe AS totaldeduccionespersonales 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'SUBTOTAL_DEDUCCIONES_PERSONALES_ANUAL'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND (li.conceptoid = -29 OR li.conceptoid = -30) AND a.codigo = 'SUBTOTAL_DEDUCCIONES_PERSONALES_ANUAL'
 ),
 tmp_totalImpuestoDeterminado as (
 	SELECT l.id as liquidacionid, a.importe AS totalimpuestodeterminado 
 	FROM liquidacion l 
 	INNER JOIN liquidacionitem li ON l.id = li.liquidacionid 
 	INNER JOIN acumulador a ON li.id = a.liquidacionitemid 
-	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND li.conceptoid = -29 AND a.codigo = 'SALDO_A_PAGAR'
+	WHERE to_char(l.fechaperiodoliquidacion, 'YYYY') = anio AND ((esfinal AND  to_char(l.fechaperiodoliquidacion, 'MM') = mes) OR (not esfinal AND to_char(l.fechaperiodoliquidacion, 'MM') = mes)) AND (li.conceptoid = -29 OR li.conceptoid = -30) AND a.codigo = 'SALDO_A_PAGAR'
 )
 
-SELECT le.cuil ||' - '|| le.nombre ||' - '|| le.apellido AS legajo,
+SELECT le.cuil OR' - 'OR le.nombre OR' - 'OR le.apellido AS legajo,
 coalesce(round(ttr.totalremuneraciones,2), 0.00) AS totalremuneraciones,
 coalesce(round(ttdg.totaldeduccionesgenerales,2), 0.00) AS totaldeduccionesgenerales,
 coalesce(round(ttdp.totaldeduccionespersonales,2), 0.00) AS totaldeduccionespersonales,
