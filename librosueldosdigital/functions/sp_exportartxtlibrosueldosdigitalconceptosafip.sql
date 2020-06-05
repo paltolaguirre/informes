@@ -14,7 +14,7 @@ BEGIN
 	
 	SELECT
 	RIGHT(C_ZEROS || coalesce(ca.Codigo,''), 6)::VARCHAR AS CodigoConceptoAfip,
-    RIGHT(C_ZEROS || coalesce(c.Codigointerno,0), 10)::VARCHAR AS CodigoInterno,
+    RIGHT(C_ESPACIOS || coalesce(c.Codigointerno,0), 10)::VARCHAR AS CodigoInterno,
     RIGHT(C_ESPACIOS || coalesce(c.nombre,''), 150)::VARCHAR AS ConceptoNombre,
     CASE WHEN c.marcarepeticion  THEN '1' ELSE '0' END AS Marcarepeticion,
     CASE WHEN c.aportesipa  THEN '1' ELSE '0' END AS AporteSipa,
@@ -51,12 +51,12 @@ BEGIN
             tt_FINAL.AportesFondoSolidario ||
             tt_FINAL.ContribucionesFondoSolidario ||
             tt_FINAL.AportesRenatea ||
-            tt_FINAL.ContribucionesRenatea ||
-            tt_FINAL.AsignacionesFamiliares ||
-            tt_FINAL.ContribucionesFondoNacional ||
+            tt_FINAL.ContribucionesRenatea || ' ' ||
+            tt_FINAL.AsignacionesFamiliares || ' ' ||
+            tt_FINAL.ContribucionesFondoNacional || ' '||
             tt_FINAL.ContribucionesLeyRiesgo ||
-            tt_FINAL.AportesRegimenesDiferenciales ||
-            tt_FINAL.AportesRegimenesEspeciales
+            tt_FINAL.AportesRegimenesDiferenciales || ' ' ||
+            tt_FINAL.AportesRegimenesEspeciales || ' '
 		) AS data
 		FROM tt_FINAL;
 	
