@@ -85,13 +85,13 @@ var routes = Routes{
 	Route{
 		"LibroSueldosDigital",
 		"GET",
-		"/api/informe/informes/libro-sueldos-digital",
+		"/api/informe/informes/afip-libro-sueldos-digital",
 		librosueldosdigital.LibroSueldosDigital,
 	},
 	Route{
 		"LibroSueldosDigitalExportarTxtConceptosAFIP",
 		"GET",
-		"/api/informe/informes/libro-sueldos-digital-exportartxt-conceptosafip",
+		"/api/informe/informes/afip-libro-sueldos-digital-exportartxt-conceptosafip",
 		librosueldosdigital.LibroSueldosDigitalExportarTxtConceptosAFIP,
 	},
 }
