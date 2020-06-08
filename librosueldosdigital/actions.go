@@ -3,6 +3,7 @@ package librosueldosdigital
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
@@ -17,7 +18,7 @@ type Librosueldosdigital struct {
 	Fechaperiodoliquidacion time.Time `json:"fechaperiodoliquidacion"`
 }
 
-type Exportartxtconceptosafip struct {
+type Exportartxtlibrosueldosdigital struct {
 	Data string `json:"data"`
 }
 
@@ -37,17 +38,21 @@ func LibroSueldosDigital(w http.ResponseWriter, r *http.Request) {
 
 		p_tipoliquidacion := queries["tipoliquidacion"][0]
 		p_periodomensual := queries["periodomensual"][0]
+		esmensual := true
 
-		db.Raw("SELECT * FROM SP_LIBROSUELDOSDIGITAL('" + p_tipoliquidacion + "','" + p_periodomensual + "')").Scan(&librossueldosdigitales)
+		if p_tipoliquidacion != "MENSUAL" {
+			esmensual = false
+		}
 
+		db.Raw("SELECT * FROM SP_LIBROSUELDOSDIGITAL(" + strconv.FormatBool(esmensual) + ",'" + p_periodomensual + "')").Scan(&librossueldosdigitales)
 		framework.RespondJSON(w, http.StatusOK, librossueldosdigitales)
 	}
 }
 
 func LibroSueldosDigitalExportarTxtConceptosAFIP(w http.ResponseWriter, r *http.Request) {
 
-	var exportartxtconceptosafip []Exportartxtconceptosafip
-	var datosexportartxtconceptosafip Exportartxtconceptosafip
+	var exportartxtconceptosafip []Exportartxtlibrosueldosdigital
+	var datosexportartxtconceptosafip Exportartxtlibrosueldosdigital
 	fmt.Println("La URL accedida: " + r.URL.String())
 
 	tokenValido, tokenAutenticacion := apiclientautenticacion.CheckTokenValido(w, r)
