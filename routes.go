@@ -94,4 +94,10 @@ var routes = Routes{
 		"/api/informe/informes/afip-libro-sueldos-digital-exportartxt-conceptosafip",
 		librosueldosdigital.LibroSueldosDigitalExportarTxtConceptosAFIP,
 	},
+	Route{
+		"LibroSueldosDigitalExportarTxtLiquidacionesPeriodo",
+		"GET",
+		"/api/informe/informes/afip-libro-sueldos-digital-exportartxt-liquidacionesperiodo",
+		librosueldosdigital.LibroSueldosDigitalExportarTxtLiquidacionesPeriodo,
+	},
 }
