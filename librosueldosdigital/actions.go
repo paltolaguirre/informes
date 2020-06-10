@@ -7,6 +7,7 @@ import (
 	s "strings"
 	"time"
 
+	"github.com/schigh/str"
 	"github.com/xubiosueldos/autenticacion/apiclientautenticacion"
 	"github.com/xubiosueldos/conexionBD"
 	"github.com/xubiosueldos/framework"
@@ -132,7 +133,8 @@ func LibroSueldosDigitalExportarTxtLiquidacionesPeriodo(w http.ResponseWriter, r
 		db.Raw("SELECT * FROM SP_EXPORTARTXTLIBROSUELDOSDIGITALLIQUIDACIONESPERIODOREGISTROTRES(" + strconv.FormatBool(esmensual) + ",'" + p_periodomensual + "')").Scan(&exportartxtliquidacionesperiodoregistrotres)
 		db.Raw("SELECT * FROM SP_EXPORTARTXTLIBROSUELDOSDIGITALLIQUIDACIONESPERIODOREGISTROCUATRO('" + strconv.Itoa(correspondereduccionempresa) + "','" + strconv.Itoa(tipoempresa) + "','" + actividadempresa + "','" + zonaempresa + "'," + strconv.FormatBool(esmensual) + ",'" + p_periodomensual + "'," + p_importedetraccion + ")").Scan(&exportartxtliquidacionesperiodoregistrocuatro)
 
-		datosexportartxtliquidacionesperiodo.Data = "01" + s.ReplaceAll(cuitempresa, "-", "") + "SJ" + periodomensual[0] + periodomensual[1] + liquidaciontipo + periodomensual[0][2:4] + strconv.Itoa(len(exportartxtliquidacionesperiodoregistrocuatro)) + "\n"
+		cantidad := str.Pad(strconv.Itoa(len(exportartxtliquidacionesperiodoregistrocuatro)), "0", 6, str.PadLeft)
+		datosexportartxtliquidacionesperiodo.Data = "01" + s.ReplaceAll(cuitempresa, "-", "") + "SJ" + periodomensual[0] + periodomensual[1] + liquidaciontipo + periodomensual[0][2:4] + cantidad + "\n"
 
 		for i := 0; i < len(exportartxtliquidacionesperiodoregistrodos); i++ {
 
