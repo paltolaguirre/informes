@@ -24,10 +24,10 @@ BEGIN
 	SELECT
 	'03'::VARCHAR AS RegistroTres,
 	RIGHT(C_ZEROS || REPLACE(coalesce(tlc.cuil,''),'-',''), 11)::VARCHAR AS CuilRegistroTres, 
-    RIGHT(C_ESPACIOS || coalesce(tlc.codigointernoConcepto,0), 10)::VARCHAR AS CodigoInternoRegistroTres,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(tlc.cantidadConceptos,2), 0.00)::VARCHAR, '.', ','), 5) AS CantidadRegistroTres,
+    LEFT(coalesce(tlc.codigointernoConcepto,0) || C_ESPACIOS , 10)::VARCHAR AS CodigoInternoRegistroTres,
+	RIGHT(C_ZEROS || coalesce(round(tlc.cantidadConceptos,2), 0), 5) AS CantidadRegistroTres,
 	' '::VARCHAR AS UnidadesRegistroTres,
-	RIGHT(C_ZEROS || REPLACE(coalesce(round(tlc.importeConcepto,2), 0.00)::VARCHAR, '.', ','), 15) AS ImporteRegistroTres,
+	RIGHT(C_ZEROS || REPLACE(coalesce(round(tlc.importeConcepto,2), 0.00)::VARCHAR, '.', ''), 15) AS ImporteRegistroTres,
 	CASE WHEN (tlc.tipoConcepto = -1 OR tlc.tipoConcepto = -2)  THEN 'C' ELSE 'D' END AS DebitoCreditoRegistroTres,
 	REPEAT(' ', 6)::VARCHAR AS PeriodoAjusteRegistroTres
 	
