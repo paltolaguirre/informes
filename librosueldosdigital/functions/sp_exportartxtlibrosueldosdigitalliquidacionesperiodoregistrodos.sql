@@ -23,7 +23,7 @@ BEGIN
 	SELECT
 	'02'::VARCHAR AS RegistroDos,
 	RIGHT(C_ZEROS || REPLACE(coalesce(tll.cuil,''),'-',''), 11)::VARCHAR AS CuilRegistroDos, 
-	RIGHT(C_ESPACIOS || coalesce(tll.legajo,''), 10)::VARCHAR AS LegajoRegistroDos, 
+	LEFT(coalesce(tll.legajo,'') || C_ESPACIOS, 10)::VARCHAR AS LegajoRegistroDos, 
 	REPEAT(' ', 50)::VARCHAR AS DependenciaRevistaRegistroDos,
 	RIGHT(C_ESPACIOS || coalesce(tll.cbu,''), 22)::VARCHAR AS CbuRegistroDos,
 	REPEAT('0', 3)::VARCHAR AS CantDiasParaTopeRegistroDos,

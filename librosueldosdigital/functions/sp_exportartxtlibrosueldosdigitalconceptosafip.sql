@@ -5,7 +5,7 @@ AS $function$
 DECLARE
 	-- Constantes
 	C_ZEROS CONSTANT VARCHAR := '000000000000000000000000000000000000';	
-   	C_ESPACIOS CONSTANT VARCHAR := '                                                                        ';
+   	C_ESPACIOS CONSTANT VARCHAR := '                                                                                                                                                      ';
 
 BEGIN	
 	DROP TABLE IF EXISTS tt_FINAL;
@@ -14,8 +14,8 @@ BEGIN
 	
 	SELECT
 	RIGHT(C_ZEROS || coalesce(ca.Codigo,''), 6)::VARCHAR AS CodigoConceptoAfip,
-    RIGHT(C_ESPACIOS || coalesce(c.Codigointerno,0), 10)::VARCHAR AS CodigoInterno,
-    RIGHT(C_ESPACIOS || coalesce(c.nombre,''), 150)::VARCHAR AS ConceptoNombre,
+    LEFT(coalesce(c.Codigointerno,0) || C_ESPACIOS, 10)::VARCHAR AS CodigoInterno,
+    LEFT(coalesce(c.nombre,' ') || C_ESPACIOS, 150)::VARCHAR AS ConceptoNombre,
     CASE WHEN c.marcarepeticion  THEN '1' ELSE '0' END AS Marcarepeticion,
     CASE WHEN c.aportesipa  THEN '1' ELSE '0' END AS AporteSipa,
     CASE WHEN c.contribucionsipa  THEN '1' ELSE '0' END AS ContribucionSipa,
@@ -31,10 +31,13 @@ BEGIN
     CASE WHEN c.contribucionesfondonacional  THEN '1' ELSE '0' END AS ContribucionesFondoNacional,
     CASE WHEN c.contribucionesleyriesgo  THEN '1' ELSE '0' END AS ContribucionesLeyRiesgo,
     CASE WHEN c.aportesregimenesdiferenciales  THEN '1' ELSE '0' END AS AportesRegimenesDiferenciales,
-    CASE WHEN c.aportesregimenesespeciales  THEN '1' ELSE '0' END AS AportesRegimenesEspeciales
+    CASE WHEN c.aportesregimenesespeciales  THEN '1' ELSE '0' END AS AportesRegimenesEspeciales,
+    ' ' ::VARCHAR AS Libre,
+    REPEAT(' ', 9)::VARCHAR AS LibreNueve
 
 	FROM Concepto c
-	LEFT JOIN Conceptoafip ca ON c.conceptoafipid = ca.id;
+	LEFT JOIN Conceptoafip ca ON c.conceptoafipid = ca.id
+    WHERE c.esimprimible;
 
 	RETURN QUERY
 		SELECT (
@@ -51,12 +54,17 @@ BEGIN
             tt_FINAL.AportesFondoSolidario ||
             tt_FINAL.ContribucionesFondoSolidario ||
             tt_FINAL.AportesRenatea ||
-            tt_FINAL.ContribucionesRenatea || ' ' ||
-            tt_FINAL.AsignacionesFamiliares || ' ' ||
-            tt_FINAL.ContribucionesFondoNacional || ' '||
+            tt_FINAL.ContribucionesRenatea ||
+            tt_FINAL.Libre  ||
+            tt_FINAL.AsignacionesFamiliares || 
+            tt_FINAL.Libre ||
+            tt_FINAL.ContribucionesFondoNacional || 
+            tt_FINAL.Libre ||
             tt_FINAL.ContribucionesLeyRiesgo ||
-            tt_FINAL.AportesRegimenesDiferenciales || ' ' ||
-            tt_FINAL.AportesRegimenesEspeciales || ' '
+            tt_FINAL.AportesRegimenesDiferenciales || 
+            tt_FINAL.Libre ||
+            tt_FINAL.AportesRegimenesEspeciales ||
+            tt_FINAL.LibreNueve
 		) AS data
 		FROM tt_FINAL;
 	
