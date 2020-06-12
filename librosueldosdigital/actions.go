@@ -134,8 +134,10 @@ func LibroSueldosDigitalExportarTxtLiquidacionesPeriodo(w http.ResponseWriter, r
 		db.Raw("SELECT * FROM SP_EXPORTARTXTLIBROSUELDOSDIGITALLIQUIDACIONESPERIODOREGISTROCUATRO('" + strconv.Itoa(correspondereduccionempresa) + "','" + strconv.Itoa(tipoempresa) + "','" + actividadempresa + "','" + zonaempresa + "'," + strconv.FormatBool(esmensual) + ",'" + p_periodomensual + "'," + p_importedetraccion + ")").Scan(&exportartxtliquidacionesperiodoregistrocuatro)
 
 		cantidad := str.Pad(strconv.Itoa(len(exportartxtliquidacionesperiodoregistrocuatro)), "0", 6, str.PadLeft)
-		datosexportartxtliquidacionesperiodo.Data = "01" + s.ReplaceAll(cuitempresa, "-", "") + "SJ" + periodomensual[0] + periodomensual[1] + liquidaciontipo + periodomensual[0][2:4] + cantidad + "\n"
+		numeroliquidacion := str.Pad(periodomensual[0][2:4]+periodomensual[1], "0", 5, str.PadLeft)
 
+		datosexportartxtliquidacionesperiodo.Data = "01" + s.ReplaceAll(cuitempresa, "-", "") + "SJ" + periodomensual[0] + periodomensual[1] + liquidaciontipo + numeroliquidacion + "30" + cantidad + "\n"
+		fmt.Println(datosexportartxtliquidacionesperiodo.Data)
 		for i := 0; i < len(exportartxtliquidacionesperiodoregistrodos); i++ {
 
 			datosexportartxtliquidacionesperiodo.Data = datosexportartxtliquidacionesperiodo.Data + exportartxtliquidacionesperiodoregistrodos[i].Data + "\n"
