@@ -13,7 +13,7 @@ BEGIN
 	CREATE TEMP TABLE tt_FINAL AS
 
 	WITH tmp_LiquidacionLegajo AS(
-		SELECT l.id AS liquidacionid,le.cuil AS cuil,le.legajo AS legajo,le.cbu AS cbu, l.condicionpagoid AS condicionpago, l.fechaperiodoliquidacion AS fechaperiodoliquidacion, l.fechaliquidacion AS fechaliquidacion
+		SELECT l.id AS liquidacionid,le.cuil AS cuil,le.legajo AS legajo,le.cbu AS cbu, l.condicionpagoid AS condicionpago, l.fechaperiodoliquidacion AS fechaperiodoliquidacion, l.fecha AS fechaliquidacion
 		FROM liquidacion l
 		INNER JOIN legajo le ON l.legajoid = le.id 
 		INNER JOIN liquidaciontipo lt on l.tipoid = lt.id
