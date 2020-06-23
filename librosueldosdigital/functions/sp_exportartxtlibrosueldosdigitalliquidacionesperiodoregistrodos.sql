@@ -13,7 +13,7 @@ BEGIN
 	CREATE TEMP TABLE tt_FINAL AS
 
 	WITH tmp_LiquidacionLegajo AS(
-		SELECT l.id AS liquidacionid,le.cuil AS cuil,le.legajo AS legajo,le.cbu AS cbu, l.condicionpagoid AS condicionpago, l.fechaperiodoliquidacion AS fechaperiodoliquidacion
+		SELECT l.id AS liquidacionid,le.cuil AS cuil,le.legajo AS legajo,le.cbu AS cbu, l.condicionpagoid AS condicionpago, l.fechaperiodoliquidacion AS fechaperiodoliquidacion, l.fecha AS fechaliquidacion
 		FROM liquidacion l
 		INNER JOIN legajo le ON l.legajoid = le.id 
 		INNER JOIN liquidaciontipo lt on l.tipoid = lt.id
@@ -27,8 +27,8 @@ BEGIN
 	REPEAT(' ', 50)::VARCHAR AS DependenciaRevistaRegistroDos,
 	RIGHT(C_ESPACIOS || coalesce(tll.cbu,''), 22)::VARCHAR AS CbuRegistroDos,
 	REPEAT('0', 3)::VARCHAR AS CantDiasParaTopeRegistroDos,
-	RIGHT(C_ZEROS || coalesce(to_char(tll.fechaperiodoliquidacion , 'YYYY') || to_char(tll.fechaperiodoliquidacion , 'MM') || to_char(tll.fechaperiodoliquidacion , 'DD'),''),8)::VARCHAR AS FechaPagoRegistroDos,
-	RIGHT(C_ESPACIOS || '0', 8)::VARCHAR AS FechaRubricaRegistroDos,
+	RIGHT(C_ZEROS || coalesce(to_char(tll.fechaliquidacion , 'YYYY') || to_char(tll.fechaliquidacion , 'MM') || to_char(tll.fechaliquidacion , 'DD'),''),8)::VARCHAR AS FechaPagoRegistroDos,
+	REPEAT(' ', 8)::VARCHAR AS FechaRubricaRegistroDos,
     CASE WHEN tll.condicionpago = -1  THEN '3' ELSE '1' END AS FormaPagoRegistroDos
 	
 	FROM Liquidacion l
