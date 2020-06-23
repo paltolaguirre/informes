@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/xubiosueldos/informes/cargassocialesf931"
 	"github.com/xubiosueldos/informes/librosueldos"
+	"github.com/xubiosueldos/informes/librosueldosdigital"
 	"github.com/xubiosueldos/informes/liquidacionfinalanual"
 )
 
@@ -80,5 +81,23 @@ var routes = Routes{
 		"GET",
 		"/api/informe/informes/liquidacion-final-anual-f1357-exportartxt",
 		liquidacionfinalanual.LiquidacionFinalAnualF1357ExportarTxt,
+	},
+	Route{
+		"LibroSueldosDigital",
+		"GET",
+		"/api/informe/informes/afip-libro-sueldos-digital",
+		librosueldosdigital.LibroSueldosDigital,
+	},
+	Route{
+		"LibroSueldosDigitalExportarTxtConceptosAFIP",
+		"GET",
+		"/api/informe/informes/afip-libro-sueldos-digital-exportartxt-conceptosafip",
+		librosueldosdigital.LibroSueldosDigitalExportarTxtConceptosAFIP,
+	},
+	Route{
+		"LibroSueldosDigitalExportarTxtLiquidacionesPeriodo",
+		"GET",
+		"/api/informe/informes/afip-libro-sueldos-digital-exportartxt-liquidacionesperiodo",
+		librosueldosdigital.LibroSueldosDigitalExportarTxtLiquidacionesPeriodo,
 	},
 }
