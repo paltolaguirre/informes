@@ -59,7 +59,7 @@ func InformeF931ExportarTxt(w http.ResponseWriter, r *http.Request) {
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
-		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion, true)
 
 		actividad := strempresa.Actividad
 		tipodeempresa := strconv.Itoa(strempresa.Tipodeempresa)

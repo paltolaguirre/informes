@@ -65,7 +65,7 @@ func LiquidacionFinalAnualF1357ExportarTxt(w http.ResponseWriter, r *http.Reques
 		p_anio := queries["anio"][0]
 		p_mes := queries["mes"][0]
 
-		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion, true)
 		cuitempresa := (strempresa.Cuit)
 		if cuitempresa == "" {
 			framework.RespondError(w, http.StatusNotFound, "Debe completar el CUIT del Agente de Retención ")
