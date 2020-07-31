@@ -112,7 +112,7 @@ func LibroSueldosDigitalExportarTxtLiquidacionesPeriodo(w http.ResponseWriter, r
 			}
 		}
 
-		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion, true)
 		cuitempresa := strempresa.Cuit
 		correspondereduccionempresa := strempresa.Reducevalor
 		tipoempresa := strempresa.Tipodeempresa

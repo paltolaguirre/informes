@@ -86,7 +86,7 @@ func ImpresionEncabezado(w http.ResponseWriter, r *http.Request) {
 		db := conexionBD.ObtenerDB(tenant)
 		defer conexionBD.CerrarDB(db)
 
-		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion)
+		strempresa := monoliticComunication.Obtenerdatosempresa(w, r, tokenAutenticacion, true)
 		cuitEmpresa := strempresa.Cuit
 		nombreEmpresa := strempresa.Nombre
 		domicilioEmpresa := strempresa.Domicilio
