@@ -125,6 +125,13 @@ BEGIN
 		LEFT JOIN situacion sdos ON li.situacionrevistadosid = sdos.id 
 		LEFT JOIN situacion stres ON li.situacionrevistatresid = stres.id
 		GROUP BY le.id
+	),
+	tmp_zona AS(
+		SELECT le.id AS legajoid, z.nombre AS nombre, z.codigo AS codigo
+		FROM Legajo le 
+		INNER JOIN liquidacion li ON li.legajoid = le.id
+		LEFT JOIN zona z ON li.zonaid = z.id
+		GROUP BY le.id,z.nombre,z.codigo
 	)
 
 	SELECT 	
@@ -135,7 +142,7 @@ BEGIN
 	RIGHT(C_ZEROS || coalesce(s.Codigo,''), 2) AS CodigoSituacion,
 	RIGHT(C_ZEROS || coalesce(cond.Codigo,''), 2) AS CodigoCondicion,
 	RIGHT(C_ZEROS || coalesce(actividad,''), 3) AS CodigoActividad,
-	RIGHT(C_ZEROS || coalesce(zona,''), 2) AS CodigoZona,
+	RIGHT(C_ZEROS || coalesce(tz.codigo,''), 2) AS CodigoZona,
 	REPEAT('0', 5)::VARCHAR AS PorcentajeAporteAdicionalSS,
 	RIGHT(C_ZEROS || coalesce(mc.Codigo,'') , 3) AS CodigoModalidadContratacion,
 	RIGHT(C_ZEROS || coalesce(os.Codigo,''), 6) AS CodigoObraSocial,
@@ -147,7 +154,7 @@ BEGIN
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 9) AS ImporteAdicionalOS,
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 9) AS ImporteExcedenteAportesSS,
 	RIGHT(C_ZEROS || REPLACE(0.00::VARCHAR, '.', ','), 9) AS ImporteExcedenteAportesOS,
-	LEFT(coalesce(zonanombre,'') || C_ESPACIOS, 50) AS ProvinciaLocalidad,
+	LEFT(coalesce(tz.nombre,'') || C_ESPACIOS, 50) AS ProvinciaLocalidad,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(tcisd.importeIncrementoSalarialDto14_20,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible2,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible3,
 	RIGHT(C_ZEROS || REPLACE(coalesce(round(coalesce(ir.importeRemunerativo,0.00) - coalesce(id.importeDescuento,0.00),2), 0.00)::VARCHAR, '.', ','), 12) AS RemuneracionImponible4,
@@ -207,8 +214,9 @@ BEGIN
 	LEFT JOIN tmp_conceptoVacaciones tcv ON tcv.legajoid = l.id
 	LEFT JOIN tmp_cantidadHorasExtras tcanthe ON tcanthe.legajoid = l.id
 	LEFT JOIN tmp_conceptoIncrementoSalarialDto14_20 tcisd ON tcisd.legajoid = l.id
+	LEFT JOIN tmp_zona tz ON tz.legajoid = l.id
 	WHERE li.fechaperiodoliquidacion BETWEEN fechadesde AND fechahasta 
-	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20,li.cantidaddiastrabajados,tsr.legajoid;
+	GROUP BY l.id,l.cuil,l.apellido,l.nombre,co.cantidadconyuge,h.cantidadhijos,l.situacionid,l.condicionid,tca.cantidadadherentes,ir.importeRemunerativo,inr.importeNoRemunerativo,id.importeDescuento,tcsac.importeSueldoAnualComplementario,tche.importeHorasExtras,tcv.importeVacaciones,tcanthe.cantidadHorasExtras,s.Codigo,cond.Codigo,mc.Codigo,os.Codigo,cs.Codigo,tcisd.importeIncrementoSalarialDto14_20,li.cantidaddiastrabajados,tsr.legajoid,tz.nombre,tz.codigo;
 
 	RETURN QUERY
 		SELECT (
